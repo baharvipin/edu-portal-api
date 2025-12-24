@@ -61,6 +61,11 @@ exports.login = async (req, res) => {
     if (!valid) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+    
+    const school = await prisma.school.findUnique({ where: { id: user.schoolId } });
+    if (!school || !school.isActive) {
+      return res.status(403).json({ message: "School is not active" });
+    }
 
     const token = jwt.sign(
       { userId: user.id, schoolId: user.schoolId },
@@ -68,7 +73,14 @@ exports.login = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.json({ token });
+    res.json({ token, 
+      user: { id: user.id, name: user.name, email: user.email, 
+        schoolId: user.schoolId, isActive: user.isActive }, 
+        school: { id: school.id, name: school.name, isActive: school.isActive , status: school.status , 
+          profileCompleted: school.profileCompleted, system: school.system, board: school.board, 
+          city: school.city, state: school.state, email: school.email,
+           createdAt: school.createdAt, updatedAt: school.updatedAt } 
+      });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error.' });
