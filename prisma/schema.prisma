@@ -32,11 +32,12 @@ model Admin {
   email     String   @unique
   password  String
 
-  schoolId  String
-  school    School  @relation(fields: [schoolId], references: [id])
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id])
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  role      Role @default(NONE)
 }
 
 model SchoolProfile {
@@ -81,5 +82,11 @@ enum SchoolStatus {
   INACTIVE                // Admin deactivated
   SUSPENDED               // Policy violation
   REJECTED                // Rejected by SuperAdmin
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  NONE
 }
 
