@@ -4,26 +4,43 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model School {
+  id               String   @id @default(uuid())
+  name             String
+  board            String
+  city             String
+  state            String
+  email            String   @unique
+  system           String?
+
+  profileCompleted Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  status           SchoolStatus @default(PROFILE_INCOMPLETE)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  admins           Admin[]
+}
+
+model Admin {
   id        String   @id @default(uuid())
   name      String
-  board     String
-  status    String   @default("PROFILE_INCOMPLETE")
-  createdAt DateTime @default(now())
-
-  users     User[]
-}
-
-model User {
-  id        String   @id @default(uuid())
-  fullName  String
   email     String   @unique
   password  String
-  role      String   @default("SCHOOL_ADMIN")
 
   schoolId  String
-  school    School   @relation(fields: [schoolId], references: [id])
+  school    School  @relation(fields: [schoolId], references: [id])
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
+
+enum SchoolStatus {
+  PROFILE_INCOMPLETE
+  PROFILE_COMPLETE
+  SUSPENDED
+}
+
