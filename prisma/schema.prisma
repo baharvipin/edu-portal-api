@@ -75,10 +75,11 @@ model SchoolProfile {
  
 
 enum SchoolStatus {
-  PROFILE_INCOMPLETE
-  PROFILE_COMPLETE
-  ACTIVE
-  INACTIVE
-  SUSPENDED
+  PROFILE_INCOMPLETE      // Just registered
+  PROFILE_SUBMITTED       // Profile completed, waiting for approval
+  ACTIVE                  // Approved & live
+  INACTIVE                // Admin deactivated
+  SUSPENDED               // Policy violation
+  REJECTED                // Rejected by SuperAdmin
 }
 
