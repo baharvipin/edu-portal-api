@@ -11,7 +11,5 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/school", schoolRoutes);
-// Add this route for backward compatibility if needed
-app.use("/api/schools", authRoutes);
 
 module.exports = app;

@@ -23,6 +23,7 @@ model School {
   updatedAt        DateTime @updatedAt
 
   admins           Admin[]
+   profile         SchoolProfile?
 }
 
 model Admin {
@@ -38,9 +39,46 @@ model Admin {
   createdAt DateTime @default(now())
 }
 
+model SchoolProfile {
+  id                    String   @id @default(uuid())
+  schoolId              String   @unique
+  school                School   @relation(fields: [schoolId], references: [id])
+
+  fullAddress            String
+  registrationNumber     String
+  medium                 String
+  yearEstablished        Int
+
+  classes                String
+  academicYear           String
+  schoolTimings          String
+  gradingSystem          String
+
+  hasLabs                Boolean  @default(false)
+  hasTransport           Boolean  @default(false)
+  hasHostel              Boolean  @default(false)
+
+  logoUrl                String?
+  registrationCertUrl    String?
+  boardAffiliationUrl    String?
+
+  attendanceMode         String
+  notificationMode       String
+
+  examsModuleEnabled     Boolean  @default(false)
+  homeworkModuleEnabled  Boolean  @default(false)
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+ 
+
 enum SchoolStatus {
   PROFILE_INCOMPLETE
   PROFILE_COMPLETE
+  ACTIVE
+  INACTIVE
   SUSPENDED
 }
 

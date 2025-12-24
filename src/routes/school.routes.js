@@ -1,9 +1,9 @@
-const router = require("express").Router();
 
-// Add school routes here when needed
-// Example:
-// const { getSchools, createSchool } = require("../controllers/school.controller");
-// router.get("/", getSchools);
-// router.post("/", createSchool);
+// routes/school.routes.js
+const router = require("express").Router();
+const { completeSchoolProfile } = require("../controllers/school.controller");
+const auth = require("../middleware/auth.middleware");
+
+router.post("/complete-profile", auth, completeSchoolProfile);
 
 module.exports = router;
