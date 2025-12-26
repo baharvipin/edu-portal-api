@@ -58,11 +58,11 @@ exports.approveSchool = async (req, res) => {
     }
 
     // 2️⃣ Allow approve only if profile submitted
-    if (school.status !== "PROFILE_SUBMITTED") {
-      return res.status(400).json({
-        message: `School cannot be approved in '${school.status}' status`,
-      });
-    }
+    // if (school.status !== "PROFILE_SUBMITTED") {
+    //   return res.status(400).json({
+    //     message: `School cannot be approved in '${school.status}' status`,
+    //   });
+    // }
 
     // 3️⃣ Ensure profile exists
     if (!school.profile) {
@@ -127,6 +127,45 @@ exports.suspendSchool = async (req, res) => {
 
   } catch (error) {
     console.error("Suspend School Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.deactivateSchool = async (req, res) => {
+  try {
+    const { schoolId } = req.params;
+
+    // 1️⃣ Find school
+    const school = await prisma.school.findUnique({
+      where: { id: schoolId },
+    });
+
+    if (!school) {
+      return res.status(404).json({ message: "School not found" });
+    }
+
+    // 2️⃣ Only ACTIVE schools can be deactivated
+    if (school.status !== "ACTIVE") {
+      return res.status(400).json({
+        message: `Only ACTIVE schools can be deactivated. Current status: ${school.status}`,
+      });
+    }
+
+    // 3️⃣ Update status to INACTIVE
+    const updatedSchool = await prisma.school.update({
+      where: { id: schoolId },
+      data: {
+        status: "INACTIVE",
+      },
+    });
+
+    res.status(200).json({
+      message: "School deactivated successfully",
+      school: updatedSchool,
+    });
+
+  } catch (error) {
+    console.error("Deactivate School Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
