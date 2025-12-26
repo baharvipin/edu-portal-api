@@ -39,3 +39,54 @@ exports.getAllSchoolsWithDetails = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+exports.approveSchool = async (req, res) => {
+  try {
+    const { schoolId } = req.params;
+
+    // 1️⃣ Find school with profile
+    const school = await prisma.school.findUnique({
+      where: { id: schoolId },
+      include: {
+        profile: true,
+      },
+    });
+
+    if (!school) {
+      return res.status(404).json({ message: "School not found" });
+    }
+
+    // 2️⃣ Allow approve only if profile submitted
+    if (school.status !== "PROFILE_SUBMITTED") {
+      return res.status(400).json({
+        message: `School cannot be approved in '${school.status}' status`,
+      });
+    }
+
+    // 3️⃣ Ensure profile exists
+    if (!school.profile) {
+      return res.status(400).json({
+        message: "School profile is missing",
+      });
+    }
+
+    // 4️⃣ Update school status
+    const updatedSchool = await prisma.school.update({
+      where: { id: schoolId },
+      data: {
+        status: "ACTIVE",
+        profileCompleted: true,
+      },
+    });
+
+    res.status(200).json({
+      message: "School approved successfully",
+      school: updatedSchool,
+    });
+
+  } catch (error) {
+    console.error("Approve School Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
