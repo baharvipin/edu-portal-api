@@ -4,6 +4,7 @@ const {
   approveSchool,
   suspendSchool,
   deactivateSchool,
+  rejectSchool,
 } = require("../controllers/superadmin.controller");
 
 const auth = require("../middleware/auth.middleware");
@@ -30,6 +31,13 @@ router.patch(
   auth,
   requireSuperAdmin,
   deactivateSchool,
+);
+
+router.patch(
+  "/schools/:schoolId/reject",
+  auth,
+  requireSuperAdmin,
+  rejectSchool,
 );
 
 module.exports = router;

@@ -53,13 +53,16 @@ exports.registerSchool = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log("Login attempt for email:", password, email);
 
     const user = await prisma.admin.findUnique({ where: { email } });
+    console.log("User fetched for login:", user);
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const valid = await bcrypt.compare(password, user.password);
+    console.log("Password validation result:", valid);
     if (!valid) {
       return res.status(401).json({ message: "Invalid credentials" });
     }

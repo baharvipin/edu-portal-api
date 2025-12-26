@@ -165,3 +165,46 @@ exports.deactivateSchool = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.rejectSchool = async (req, res) => {
+  try {
+    const { schoolId } = req.params;
+
+    // 1️⃣ Find school
+    const school = await prisma.school.findUnique({
+      where: { id: schoolId },
+    });
+
+    if (!school) {
+      return res.status(404).json({ message: "School not found" });
+    }
+
+    // 2️⃣ Allow reject only for specific states
+    const allowedStatuses = ["PROFILE_SUBMITTED", "PROFILE_INCOMPLETE"];
+
+    if (!allowedStatuses.includes(school.status)) {
+      return res.status(400).json({
+        message: `School cannot be rejected in '${school.status}' status`,
+      });
+    }
+
+    // 3️⃣ Update school status
+    const updatedSchool = await prisma.school.update({
+      where: { id: schoolId },
+      data: {
+        status: "REJECTED",
+        profileCompleted: false,
+        // Optional future use
+        // rejectionReason: reason ?? null,
+      },
+    });
+
+    res.status(200).json({
+      message: "School rejected successfully",
+      school: updatedSchool,
+    });
+  } catch (error) {
+    console.error("Reject School Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
