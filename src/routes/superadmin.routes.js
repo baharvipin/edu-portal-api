@@ -2,6 +2,7 @@ const router = require("express").Router();
 const {
   getAllSchoolsWithDetails,
   approveSchool,
+    suspendSchool,
 } = require("../controllers/superadmin.controller");
 
 const auth = require("../middleware/auth.middleware");
@@ -14,6 +15,13 @@ router.patch(
   auth,
   requireSuperAdmin,
   approveSchool
+);
+
+router.patch(
+  "/schools/:schoolId/suspend",
+  auth,
+  requireSuperAdmin,
+  suspendSchool
 );
 
 module.exports = router;

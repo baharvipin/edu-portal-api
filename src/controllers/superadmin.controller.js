@@ -90,3 +90,43 @@ exports.approveSchool = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.suspendSchool = async (req, res) => {
+  try {
+    const { schoolId } = req.params;
+    const { reason } = req.body; // optional
+
+    // 1️⃣ Find school
+    const school = await prisma.school.findUnique({
+      where: { id: schoolId },
+    });
+
+    if (!school) {
+      return res.status(404).json({ message: "School not found" });
+    }
+
+    // 2️⃣ Only ACTIVE schools can be suspended
+    if (school.status !== "ACTIVE") {
+      return res.status(400).json({
+        message: `Only ACTIVE schools can be suspended. Current status: ${school.status}`,
+      });
+    }
+
+    // 3️⃣ Update status to SUSPENDED
+    const updatedSchool = await prisma.school.update({
+      where: { id: schoolId },
+      data: {
+        status: "SUSPENDED"
+      },
+    });
+
+    res.status(200).json({
+      message: "School suspended successfully",
+      school: updatedSchool,
+    });
+
+  } catch (error) {
+    console.error("Suspend School Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
