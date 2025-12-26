@@ -59,7 +59,8 @@ class AuthService {
             name: adminName,
             email: adminEmail,
             password: hashedPassword,
-            isActive: true
+            isActive: true,
+            role: 'ADMIN'
           }
         }
       },
