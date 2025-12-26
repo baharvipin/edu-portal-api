@@ -55,9 +55,8 @@ exports.completeSchoolProfile = async (req, res) => {
         message: "Missing required school profile fields",
       });
     }
-    
 
-    // 4️⃣ Upsert School Profile 
+    // 4️⃣ Upsert School Profile
     await prisma.schoolProfile.upsert({
       where: { schoolId: admin.schoolId },
       update: {
@@ -123,7 +122,6 @@ exports.completeSchoolProfile = async (req, res) => {
     res.status(200).json({
       message: "School profile completed & activated successfully",
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

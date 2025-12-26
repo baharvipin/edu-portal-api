@@ -9,16 +9,16 @@ async function main() {
   });
 
   if (!existingAdmin) {
-      await prisma.admin.create({
-        data: {
-          name: "System Admin",
-          email: "superadmin@eduportal.com",
-          password: hashedPassword,
-          role: "SUPER_ADMIN",
-           isActive: true,
-           schoolId: null,
-        },
-      });
+    await prisma.admin.create({
+      data: {
+        name: "System Admin",
+        email: "superadmin@eduportal.com",
+        password: hashedPassword,
+        role: "SUPER_ADMIN",
+        isActive: true,
+        schoolId: null,
+      },
+    });
     console.log("✅ SuperAdmin created");
   } else {
     console.log("ℹ️ SuperAdmin already exists");

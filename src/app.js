@@ -13,5 +13,4 @@ app.use("/api/auth", authRoutes);
 app.use("/api/school", schoolRoutes);
 app.use("/api/superadmin", superAdminRoutes);
 
-
 module.exports = app;

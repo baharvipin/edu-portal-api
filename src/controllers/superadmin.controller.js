@@ -40,7 +40,6 @@ exports.getAllSchoolsWithDetails = async (req, res) => {
   }
 };
 
-
 exports.approveSchool = async (req, res) => {
   try {
     const { schoolId } = req.params;
@@ -84,7 +83,6 @@ exports.approveSchool = async (req, res) => {
       message: "School approved successfully",
       school: updatedSchool,
     });
-
   } catch (error) {
     console.error("Approve School Error:", error);
     res.status(500).json({ message: "Server error" });
@@ -116,7 +114,7 @@ exports.suspendSchool = async (req, res) => {
     const updatedSchool = await prisma.school.update({
       where: { id: schoolId },
       data: {
-        status: "SUSPENDED"
+        status: "SUSPENDED",
       },
     });
 
@@ -124,7 +122,6 @@ exports.suspendSchool = async (req, res) => {
       message: "School suspended successfully",
       school: updatedSchool,
     });
-
   } catch (error) {
     console.error("Suspend School Error:", error);
     res.status(500).json({ message: "Server error" });
@@ -163,7 +160,6 @@ exports.deactivateSchool = async (req, res) => {
       message: "School deactivated successfully",
       school: updatedSchool,
     });
-
   } catch (error) {
     console.error("Deactivate School Error:", error);
     res.status(500).json({ message: "Server error" });

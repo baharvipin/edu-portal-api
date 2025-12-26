@@ -22,21 +22,21 @@ class AuthService {
       adminEmail,
       password,
       system,
-      termsAccepted
+      termsAccepted,
     } = registrationData;
 
     // Validate terms acceptance
     if (!termsAccepted) {
-      throw new Error('Terms must be accepted.');
+      throw new Error("Terms must be accepted.");
     }
 
     // Check if school email already exists
     const existingSchool = await prisma.school.findUnique({
-      where: { email: schoolEmail }
+      where: { email: schoolEmail },
     });
 
     if (existingSchool) {
-      throw new Error('School email already exists.');
+      throw new Error("School email already exists.");
     }
 
     // Hash admin password
@@ -53,20 +53,20 @@ class AuthService {
         system,
         profileCompleted: false,
         isActive: true,
-        status: 'PROFILE_INCOMPLETE',
+        status: "PROFILE_INCOMPLETE",
         admins: {
           create: {
             name: adminName,
             email: adminEmail,
             password: hashedPassword,
             isActive: true,
-            role: 'ADMIN'
-          }
-        }
+            role: "ADMIN",
+          },
+        },
       },
       include: {
-        admins: true
-      }
+        admins: true,
+      },
     });
 
     return school;

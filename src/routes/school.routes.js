@@ -1,4 +1,3 @@
-
 // routes/school.routes.js
 const router = require("express").Router();
 const { completeSchoolProfile } = require("../controllers/school.controller");

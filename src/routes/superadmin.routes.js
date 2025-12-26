@@ -2,8 +2,8 @@ const router = require("express").Router();
 const {
   getAllSchoolsWithDetails,
   approveSchool,
-    suspendSchool,
-    deactivateSchool
+  suspendSchool,
+  deactivateSchool,
 } = require("../controllers/superadmin.controller");
 
 const auth = require("../middleware/auth.middleware");
@@ -15,22 +15,21 @@ router.patch(
   "/schools/:schoolId/approve",
   auth,
   requireSuperAdmin,
-  approveSchool
+  approveSchool,
 );
 
 router.patch(
   "/schools/:schoolId/suspend",
   auth,
   requireSuperAdmin,
-  suspendSchool
+  suspendSchool,
 );
 
 router.patch(
   "/schools/:schoolId/deactivate",
   auth,
   requireSuperAdmin,
-  deactivateSchool
+  deactivateSchool,
 );
-
 
 module.exports = router;
