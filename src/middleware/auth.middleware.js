@@ -31,7 +31,9 @@ const auth = async (req, res, next) => {
       email: admin.email,
       name: admin.name,
       schoolId: admin.schoolId,
-      school: admin.school
+      school: admin.school,
+      role: admin.role,
+      isActive: admin.isActive
     };
 
     next();
