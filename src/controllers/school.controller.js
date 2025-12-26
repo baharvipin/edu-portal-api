@@ -116,7 +116,7 @@ exports.completeSchoolProfile = async (req, res) => {
     // 5️⃣ Activate school after completion
     await prisma.school.update({
       where: { id: admin.schoolId },
-      data: { status: "ACTIVE" },
+      data: { status: "PROFILE_SUBMITTED" },
     });
 
     res.status(200).json({
