@@ -24,6 +24,7 @@ model School {
 
   admins           Admin[]
    profile         SchoolProfile?
+   teachers  Teacher[] 
 }
 
 model Admin {
@@ -38,7 +39,40 @@ model Admin {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   role      Role @default(NONE)
+
+  teacher   Teacher?
+  status    UserStatus @default(INVITED)
 }
+
+model Teacher {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  schoolId   String
+  fullName   String
+  phone      String?
+  subjects   Subject[]  @relation("TeacherSubjects")
+
+  user       Admin     @relation(fields: [userId], references: [id])
+  school     School   @relation(fields: [schoolId], references: [id])
+
+  createdAt  DateTime @default(now())
+}
+
+model Subject {
+  id       String     @id @default(uuid())
+  name     String
+  schoolId String
+
+  teachers Teacher[] @relation("TeacherSubjects")
+}
+
+
+enum UserStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+}
+
 
 model SchoolProfile {
   id                    String   @id @default(uuid())
@@ -87,6 +121,8 @@ enum SchoolStatus {
 enum Role {
   SUPER_ADMIN
   ADMIN
+  STUDENT
+  TEACHER
   NONE
 }
 
