@@ -13,6 +13,7 @@ exports.completeSchoolProfile = async (req, res) => {
     if (!admin || !admin.schoolId) {
       return res.status(403).json({ message: "Unauthorized" });
     }
+    
 
     // 2️⃣ Extract body
     const {

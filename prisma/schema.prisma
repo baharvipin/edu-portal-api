@@ -125,4 +125,3 @@ enum Role {
   TEACHER
   NONE
 }
-
