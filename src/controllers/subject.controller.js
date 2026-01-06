@@ -60,3 +60,48 @@ exports.createSubject = async (req, res) => {
   }
 };
 
+
+
+/**
+ * Update Subject
+ */
+exports.updateSubject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, code } = req.body;
+
+    // Validation
+    if (!id) {
+      return res.status(400).json({ error: "Subject id is required" });
+    }
+
+    if (!name && !code) {
+      return res.status(400).json({
+        error: "At least one field (name or code) is required to update",
+      });
+    }
+
+    // Check if subject exists
+    const existingSubject = await prisma.subject.findUnique({
+      where: { id },
+    });
+
+    if (!existingSubject) {
+      return res.status(404).json({ error: "Subject not found" });
+    }
+
+    // Update subject
+    const updatedSubject = await prisma.subject.update({
+      where: { id },
+      data: {
+        ...(name && { name }),
+        ...(code && { code }),
+      },
+    });
+
+    return res.status(200).json(updatedSubject);
+  } catch (error) {
+    console.error("Error updating subject:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
