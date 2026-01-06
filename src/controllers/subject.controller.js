@@ -105,3 +105,39 @@ exports.updateSubject = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
+/**
+ * Delete Subject
+ */
+exports.deleteSubject = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validation
+    if (!id) {
+      return res.status(400).json({ error: "Subject id is required" });
+    }
+
+    // Check if subject exists
+    const existingSubject = await prisma.subject.findUnique({
+      where: { id },
+    });
+
+    if (!existingSubject) {
+      return res.status(404).json({ error: "Subject not found" });
+    }
+
+    // Delete subject
+    await prisma.subject.delete({
+      where: { id },
+    });
+
+    return res.status(200).json({
+      message: "Subject deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting subject:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
