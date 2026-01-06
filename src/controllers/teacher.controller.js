@@ -60,6 +60,7 @@ if (invalidSubjects.length > 0) {
     const teacher = await prisma.teacher.create({
       data: {
         userId: adminUser.id,
+        email,
         schoolId,
         fullName,
         phone,
@@ -85,4 +86,52 @@ if (invalidSubjects.length > 0) {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
- 
+  
+
+exports.getTeachersBySchool = async (req, res) => {
+  try {
+    const { schoolId } = req.params;
+
+    if (!schoolId) {
+      return res.status(400).json({
+        message: "schoolId is required"
+      });
+    }
+
+    const teachers = await prisma.teacher.findMany({
+      where: {
+        schoolId
+      },
+      include: {
+        subjects: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            status: true,
+            isActive: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+
+    return res.status(200).json({
+      message: "Teachers fetched successfully",
+      teachers
+    });
+
+  } catch (error) {
+    console.error("Get Teachers Error:", error);
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+};

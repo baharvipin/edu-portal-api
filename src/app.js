@@ -16,5 +16,5 @@ app.use("/api/school", schoolRoutes);
 app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/teachers", teacherRoutes);
 
-app.use("/subjects", subjectRoutes);
+app.use("/api/subjects", subjectRoutes);
 module.exports = app;

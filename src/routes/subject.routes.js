@@ -1,8 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const subjectController = require("../controllers/subject.controller");
+const {getSubjectsBySchool, createSubject} = require("../controllers/subject.controller");
 
 // GET subjects by schoolId
-router.get("/:schoolId", subjectController.getSubjectsBySchool);
+router.get("/:schoolId", getSubjectsBySchool);
+
+// POST /subjects -> create new subject
+router.post("/addSubject", createSubject);
 
 module.exports = router;

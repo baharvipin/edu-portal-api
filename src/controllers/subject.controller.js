@@ -14,7 +14,9 @@ exports.getSubjectsBySchool = async (req, res) => {
       where: { schoolId },
       select: {
         id: true,
-        name: true
+        name: true,
+        schoolId: true,
+        code: true
       },
       orderBy: {
         name: "asc"
@@ -33,3 +35,28 @@ exports.getSubjectsBySchool = async (req, res) => {
     });
   }
 };
+ 
+/**
+ * Create a new Subject
+ */
+exports.createSubject = async (req, res) => {
+  try {
+    const { code, name, schoolId } = req.body;
+
+    // Validation
+    if (!name || !schoolId) {
+      return res.status(400).json({ error: "Name and schoolId are required" });
+    }
+
+    // Create subject
+    const newSubject = await prisma.subject.create({
+      data: { code, name, schoolId },
+    });
+
+    return res.status(201).json(newSubject);
+  } catch (error) {
+    console.error("Error creating subject:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+

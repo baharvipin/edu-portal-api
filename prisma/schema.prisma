@@ -49,6 +49,7 @@ model Teacher {
   userId     String   @unique
   schoolId   String
   fullName   String
+  email      String?
   phone      String?
   subjects   Subject[]  @relation("TeacherSubjects")
 
@@ -59,7 +60,8 @@ model Teacher {
 }
 
 model Subject {
-  id       String     @id @default(uuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  code      String?   // optional field, can be required if you want
   name     String
   schoolId String
 
