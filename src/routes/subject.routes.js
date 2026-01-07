@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const {getSubjectsBySchool, createSubject, updateSubject, deleteSubject} = require("../controllers/subject.controller");
+const {
+  getSubjectsBySchool,
+  createSubject,
+  updateSubject,
+  deleteSubject,
+} = require("../controllers/subject.controller");
 
 // GET subjects by schoolId
 router.get("/:schoolId", getSubjectsBySchool);
@@ -9,7 +14,6 @@ router.get("/:schoolId", getSubjectsBySchool);
 router.post("/addSubject", createSubject);
 // routes/subject.routes.js
 router.put("/:id", updateSubject);
-router.delete("/:id",  deleteSubject);
-
+router.delete("/:id", deleteSubject);
 
 module.exports = router;

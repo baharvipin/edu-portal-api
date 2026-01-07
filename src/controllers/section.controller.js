@@ -45,7 +45,6 @@ exports.addSection = async (req, res) => {
       message: "Section added successfully",
       section,
     });
-
   } catch (error) {
     console.error(error);
 

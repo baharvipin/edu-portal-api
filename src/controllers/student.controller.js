@@ -15,7 +15,7 @@ exports.addStudent = async (req, res) => {
       email,
       phone,
       parentName,
-      parentPhone
+      parentPhone,
     } = req.body;
 
     // Basic validation
@@ -34,7 +34,7 @@ exports.addStudent = async (req, res) => {
 
     // Check duplicate email
     const existingStudent = await prisma.student.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (existingStudent) {
@@ -51,21 +51,19 @@ exports.addStudent = async (req, res) => {
         email,
         phone,
         parentName,
-        parentPhone
-      }
+        parentPhone,
+      },
     });
 
     return res.status(201).json({
       message: "Student registered successfully",
-      student
+      student,
     });
-
   } catch (error) {
     console.error("Add Student Error:", error);
     return res.status(500).json({ message: "Failed to add student" });
   }
 };
-
 
 exports.updateStudent = async (req, res) => {
   try {
@@ -106,7 +104,6 @@ exports.updateStudent = async (req, res) => {
   }
 };
 
- 
 exports.softDeleteStudent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -129,8 +126,6 @@ exports.softDeleteStudent = async (req, res) => {
   }
 };
 
- 
-
 exports.activateStudent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -152,4 +147,3 @@ exports.activateStudent = async (req, res) => {
     return res.status(500).json({ message: "Failed to activate student" });
   }
 };
-

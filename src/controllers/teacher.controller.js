@@ -1,12 +1,10 @@
- 
 const bcrypt = require("bcrypt");
 const prisma = require("../config/db");
 
- exports.addTeacher = async (req, res) => {
+exports.addTeacher = async (req, res) => {
   try {
     const { fullName, email, phone, schoolId, subjects } = req.body;
 
-   
     // 1️⃣ Validate
     if (!fullName || !email || !schoolId || !subjects?.length) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -14,9 +12,8 @@ const prisma = require("../config/db");
 
     // 2️⃣ Check if admin/user already exists
     const existingUser = await prisma.admin.findUnique({
-      where: { email }
+      where: { email },
     });
-
 
     if (existingUser) {
       return res.status(409).json({ message: "User already exists" });
@@ -33,30 +30,30 @@ const prisma = require("../config/db");
         password: hashedPassword,
         role: "TEACHER",
         status: "INVITED",
-        schoolId
-      }
+        schoolId,
+      },
     });
 
     // 4️⃣ Fetch Subjects belonging to school
     const subjectRecords = await prisma.subject.findMany({
       where: {
         name: { in: subjects },
-        schoolId
-      }
+        schoolId,
+      },
     });
 
     // Check that all requested subjects exist
-const dbSubjectNames = subjectRecords.map(s => s.name);
+    const dbSubjectNames = subjectRecords.map((s) => s.name);
 
-// Find any subjects that are missing
-const invalidSubjects = subjects.filter(s => !dbSubjectNames.includes(s));
+    // Find any subjects that are missing
+    const invalidSubjects = subjects.filter((s) => !dbSubjectNames.includes(s));
 
-if (invalidSubjects.length > 0) {
-  return res.status(400).json({
-    message: "One or more subjects are invalid",
-    invalidSubjects // optionally send which ones are invalid
-  });
-}
+    if (invalidSubjects.length > 0) {
+      return res.status(400).json({
+        message: "One or more subjects are invalid",
+        invalidSubjects, // optionally send which ones are invalid
+      });
+    }
 
     // 5️⃣ Create Teacher and connect subjects
     const teacher = await prisma.teacher.create({
@@ -67,28 +64,27 @@ if (invalidSubjects.length > 0) {
         fullName,
         phone,
         subjects: {
-          connect: subjectRecords.map(s => ({ id: s.id }))
-        }
+          connect: subjectRecords.map((s) => ({ id: s.id })),
+        },
       },
       include: {
         subjects: true,
-        user: true
-      }
+        user: true,
+      },
     });
 
     // 6️⃣ Response
     return res.status(201).json({
       message: "Teacher added successfully",
       teacher,
-      tempPassword // send via email in real app
+      tempPassword, // send via email in real app
     });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-  
+
 exports.updateTeacher = async (req, res) => {
   try {
     const { id } = req.params;
@@ -101,7 +97,7 @@ exports.updateTeacher = async (req, res) => {
     // 1️⃣ Check teacher exists
     const existingTeacher = await prisma.teacher.findUnique({
       where: { id },
-      include: { user: true, subjects: true }
+      include: { user: true, subjects: true },
     });
 
     if (!existingTeacher) {
@@ -110,26 +106,25 @@ exports.updateTeacher = async (req, res) => {
 
     // 2️⃣ Validate subjects (if provided)
     let subjectRecords = [];
-     console.log("hello subjects", subjects)
+    console.log("hello subjects", subjects);
 
     if (subjects?.length) {
-
       subjectRecords = await prisma.subject.findMany({
         where: {
           name: { in: subjects },
-          schoolId: existingTeacher.schoolId
-        }
+          schoolId: existingTeacher.schoolId,
+        },
       });
 
-      const dbSubjectNames = subjectRecords.map(s => s.name);
+      const dbSubjectNames = subjectRecords.map((s) => s.name);
       const invalidSubjects = subjects.filter(
-        s => !dbSubjectNames.includes(s)
+        (s) => !dbSubjectNames.includes(s),
       );
 
       if (invalidSubjects.length > 0) {
         return res.status(400).json({
           message: "One or more subjects are invalid",
-          invalidSubjects
+          invalidSubjects,
         });
       }
     }
@@ -138,7 +133,7 @@ exports.updateTeacher = async (req, res) => {
     if (fullName) {
       await prisma.admin.update({
         where: { id: existingTeacher.userId },
-        data: { name: fullName }
+        data: { name: fullName },
       });
     }
 
@@ -151,27 +146,25 @@ exports.updateTeacher = async (req, res) => {
         ...(subjects && {
           subjects: {
             set: [], // 🔥 remove old
-            connect: subjectRecords.map(s => ({ id: s.id }))
-          }
-        })
+            connect: subjectRecords.map((s) => ({ id: s.id })),
+          },
+        }),
       },
       include: {
         subjects: true,
-        user: true
-      }
+        user: true,
+      },
     });
 
     return res.status(200).json({
       message: "Teacher updated successfully",
-      teacher: updatedTeacher
+      teacher: updatedTeacher,
     });
-
   } catch (error) {
     console.error("Update teacher error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 exports.getTeachersBySchool = async (req, res) => {
   try {
@@ -179,44 +172,43 @@ exports.getTeachersBySchool = async (req, res) => {
 
     if (!schoolId) {
       return res.status(400).json({
-        message: "schoolId is required"
+        message: "schoolId is required",
       });
     }
 
     const teachers = await prisma.teacher.findMany({
       where: {
-        schoolId
+        schoolId,
       },
       include: {
         subjects: {
           select: {
             id: true,
-            name: true
-          }
+            name: true,
+          },
         },
         user: {
           select: {
             id: true,
             email: true,
             status: true,
-            isActive: true
-          }
-        }
+            isActive: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc"
-      }
+        createdAt: "desc",
+      },
     });
 
     return res.status(200).json({
       message: "Teachers fetched successfully",
-      teachers
+      teachers,
     });
-
   } catch (error) {
     console.error("Get Teachers Error:", error);
     return res.status(500).json({
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
 };
@@ -228,22 +220,19 @@ exports.activateTeacher = async (req, res) => {
     const teacher = await prisma.teacher.update({
       where: { id: teacherId },
       data: {
-        isActive: true
-      }
+        isActive: true,
+      },
     });
-
 
     return res.json({
       message: "Teacher activated successfully",
-      teacher
+      teacher,
     });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Failed to activate teacher" });
   }
 };
-
 
 exports.deActivateTeacher = async (req, res) => {
   try {
@@ -252,19 +241,16 @@ exports.deActivateTeacher = async (req, res) => {
     const teacher = await prisma.teacher.update({
       where: { id: teacherId },
       data: {
-        isActive: false
-      }
+        isActive: false,
+      },
     });
-
 
     return res.json({
       message: "Teacher deactivated successfully",
-      teacher
+      teacher,
     });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Failed to deactivate teacher" });
   }
 };
-

@@ -6,7 +6,7 @@ exports.getSubjectsBySchool = async (req, res) => {
 
     if (!schoolId) {
       return res.status(400).json({
-        message: "schoolId is required"
+        message: "schoolId is required",
       });
     }
 
@@ -16,26 +16,25 @@ exports.getSubjectsBySchool = async (req, res) => {
         id: true,
         name: true,
         schoolId: true,
-        code: true
+        code: true,
       },
       orderBy: {
-        name: "asc"
-      }
+        name: "asc",
+      },
     });
 
     return res.status(200).json({
       message: "Subjects fetched successfully",
-      subjects
+      subjects,
     });
-
   } catch (error) {
     console.error("Get Subjects Error:", error);
     return res.status(500).json({
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
 };
- 
+
 /**
  * Create a new Subject
  */
@@ -59,8 +58,6 @@ exports.createSubject = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
-
-
 
 /**
  * Update Subject
@@ -105,7 +102,6 @@ exports.updateSubject = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 /**
  * Delete Subject
