@@ -6,6 +6,7 @@ const prisma = require("../config/db");
   try {
     const { fullName, email, phone, schoolId, subjects } = req.body;
 
+   
     // 1️⃣ Validate
     if (!fullName || !email || !schoolId || !subjects?.length) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -15,6 +16,7 @@ const prisma = require("../config/db");
     const existingUser = await prisma.admin.findUnique({
       where: { email }
     });
+
 
     if (existingUser) {
       return res.status(409).json({ message: "User already exists" });
@@ -87,6 +89,89 @@ if (invalidSubjects.length > 0) {
   }
 };
   
+exports.updateTeacher = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fullName, phone, subjects } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "Teacher id is required" });
+    }
+
+    // 1️⃣ Check teacher exists
+    const existingTeacher = await prisma.teacher.findUnique({
+      where: { id },
+      include: { user: true, subjects: true }
+    });
+
+    if (!existingTeacher) {
+      return res.status(404).json({ message: "Teacher not found" });
+    }
+
+    // 2️⃣ Validate subjects (if provided)
+    let subjectRecords = [];
+     console.log("hello subjects", subjects)
+
+    if (subjects?.length) {
+
+      subjectRecords = await prisma.subject.findMany({
+        where: {
+          name: { in: subjects },
+          schoolId: existingTeacher.schoolId
+        }
+      });
+
+      const dbSubjectNames = subjectRecords.map(s => s.name);
+      const invalidSubjects = subjects.filter(
+        s => !dbSubjectNames.includes(s)
+      );
+
+      if (invalidSubjects.length > 0) {
+        return res.status(400).json({
+          message: "One or more subjects are invalid",
+          invalidSubjects
+        });
+      }
+    }
+
+    // 3️⃣ Update Admin (User) name
+    if (fullName) {
+      await prisma.admin.update({
+        where: { id: existingTeacher.userId },
+        data: { name: fullName }
+      });
+    }
+
+    // 4️⃣ Update Teacher + reset subjects
+    const updatedTeacher = await prisma.teacher.update({
+      where: { id },
+      data: {
+        ...(fullName && { fullName }),
+        ...(phone && { phone }),
+        ...(subjects && {
+          subjects: {
+            set: [], // 🔥 remove old
+            connect: subjectRecords.map(s => ({ id: s.id }))
+          }
+        })
+      },
+      include: {
+        subjects: true,
+        user: true
+      }
+    });
+
+    return res.status(200).json({
+      message: "Teacher updated successfully",
+      teacher: updatedTeacher
+    });
+
+  } catch (error) {
+    console.error("Update teacher error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 exports.getTeachersBySchool = async (req, res) => {
   try {
