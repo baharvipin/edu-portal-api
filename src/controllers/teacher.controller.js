@@ -220,3 +220,51 @@ exports.getTeachersBySchool = async (req, res) => {
     });
   }
 };
+
+exports.activateTeacher = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+
+    const teacher = await prisma.teacher.update({
+      where: { id: teacherId },
+      data: {
+        isActive: true
+      }
+    });
+
+
+    return res.json({
+      message: "Teacher activated successfully",
+      teacher
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to activate teacher" });
+  }
+};
+
+
+exports.deActivateTeacher = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+
+    const teacher = await prisma.teacher.update({
+      where: { id: teacherId },
+      data: {
+        isActive: false
+      }
+    });
+
+
+    return res.json({
+      message: "Teacher deactivated successfully",
+      teacher
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to deactivate teacher" });
+  }
+};
+

@@ -52,7 +52,7 @@ model Teacher {
   email      String?
   phone      String?
   subjects   Subject[]  @relation("TeacherSubjects")
-
+  isActive   Boolean    @default(false)
   user       Admin     @relation(fields: [userId], references: [id])
   school     School   @relation(fields: [schoolId], references: [id])
 
