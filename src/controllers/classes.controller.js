@@ -71,6 +71,33 @@ exports.addClassesBulk = async (req, res) => {
 };
 
 
+// GET /api/classes/:schoolId
+exports.getClassesBySchool = async (req, res) => {
+  try {
+    const { schoolId } = req.params;
+
+    if (!schoolId) {
+      return res.status(400).json({ message: "School ID is required" });
+    }
+
+    // Fetch classes for the school including students
+    const classes = await prisma.class.findMany({
+      where: { schoolId },
+      orderBy: { order: 'asc' },
+      include: {
+        students: true, // Include students assigned to this class
+      },
+    });
+
+    return res.json({ classes });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to fetch classes" });
+  }
+};
+
+
 // await prisma.school.update({
 //   where: { id: schoolId },
 //   data: {
