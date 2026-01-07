@@ -127,3 +127,73 @@ exports.completeSchoolProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+ 
+
+/**
+ * Dashboard overview (ALL DATA IN ONE CALL)
+ */
+exports.getSchoolOverview = async (req, res) => {
+  try {
+    const { schoolId } = req.params;
+
+    const [teachers, students, subjects, classes] = await Promise.all([
+      prisma.teacher.findMany({
+        where: { schoolId },
+      }),
+      prisma.student.findMany({
+        where: { schoolId },
+      }),
+      prisma.subject.findMany({
+        where: { schoolId },
+      }),
+      prisma.class.findMany({
+        where: { schoolId },
+        include: {
+          sections: true,
+        },
+      }),
+    ]);
+
+    res.json({
+      teachers,
+      students,
+      subjects,
+      classes,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch school overview" });
+  }
+};
+
+/**
+ * Individual APIs
+ */
+exports.getTeachersBySchool = async (req, res) => {
+  const { schoolId } = req.params;
+  const teachers = await prisma.teacher.findMany({ where: { schoolId } });
+  res.json(teachers);
+};
+
+exports.getStudentsBySchool = async (req, res) => {
+  const { schoolId } = req.params;
+  const students = await prisma.student.findMany({ where: { schoolId } });
+  res.json(students);
+};
+
+exports.getSubjectsBySchool = async (req, res) => {
+  const { schoolId } = req.params;
+  const subjects = await prisma.subject.findMany({ where: { schoolId } });
+  res.json(subjects);
+};
+
+exports.getClassesBySchool = async (req, res) => {
+  const { schoolId } = req.params;
+  const classes = await prisma.class.findMany({
+    where: { schoolId },
+    include: {
+      sections: true,
+    },
+  });
+  res.json(classes);
+};
