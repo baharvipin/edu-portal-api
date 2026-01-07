@@ -23,8 +23,11 @@ model School {
   updatedAt        DateTime @updatedAt
 
   admins           Admin[]
-   profile         SchoolProfile?
-   teachers  Teacher[] 
+  profile         SchoolProfile?
+  teachers  Teacher[] 
+  classes   Class[]
+  sections  Section[]
+  students  Student[]
 }
 
 model Admin {
@@ -126,4 +129,71 @@ enum Role {
   STUDENT
   TEACHER
   NONE
+}
+
+
+model Student {
+  id           String   @id @default(uuid())
+
+  schoolId     String
+  firstName    String
+  lastName     String
+  email        String   @unique
+  phone        String
+
+  classId      String
+  sectionId    String
+
+  parentName   String
+  parentPhone  String
+
+  isActive     Boolean  @default(false)
+  deletedAt    DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  school       School   @relation(fields: [schoolId], references: [id])
+  class        Class    @relation(fields: [classId], references: [id])
+  section      Section  @relation(fields: [sectionId], references: [id])
+}
+
+
+model Class {
+  id          String    @id @default(uuid())
+  schoolId    String
+  name        String    // e.g. "1", "2", "10", "12"
+  displayName String    // e.g. "Class 10"
+  order       Int?      // for sorting (optional)
+
+  isActive    Boolean   @default(true)
+  deletedAt   DateTime?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  school      School    @relation(fields: [schoolId], references: [id])
+  sections    Section[]
+  students    Student[]
+
+  @@unique([schoolId, name])
+}
+
+model Section {
+  id         String   @id @default(uuid())
+  schoolId   String
+  classId    String
+  name       String   // A, B, C
+
+  isActive   Boolean  @default(true)
+  deletedAt  DateTime?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  school     School   @relation(fields: [schoolId], references: [id])
+  class      Class    @relation(fields: [classId], references: [id])
+  students   Student[]
+
+  @@unique([classId, name])
 }
