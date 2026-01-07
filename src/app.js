@@ -8,6 +8,7 @@ const  teacherRoutes = require("./routes/teacher.routes.js");
 const subjectRoutes = require("./routes/subject.routes");
 const classesRoutes = require("./routes/classes.routes.js")
 const sectionRoutes = require("./routes/section.routes.js");
+const studentRoutes = require("./routes/student.routes");
 const app = express();
 
 app.use(cors());
@@ -21,4 +22,5 @@ app.use("/api/teachers", teacherRoutes);
 app.use("/api/subjects", subjectRoutes);
 app.use("/api/classes", classesRoutes);
 app.use("/api/sections", sectionRoutes);
+app.use("/api/students", studentRoutes);
 module.exports = app;

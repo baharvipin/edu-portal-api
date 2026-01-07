@@ -86,6 +86,7 @@ exports.getClassesBySchool = async (req, res) => {
       orderBy: { order: 'asc' },
       include: {
         students: true, // Include students assigned to this class
+        sections: true  // Include section assigned to this class
       },
     });
 
