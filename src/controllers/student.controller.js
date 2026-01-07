@@ -65,3 +65,44 @@ exports.addStudent = async (req, res) => {
     return res.status(500).json({ message: "Failed to add student" });
   }
 };
+
+
+exports.updateStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      classId,
+      sectionId,
+      parentName,
+      parentPhone,
+    } = req.body;
+
+    const student = await prisma.student.update({
+      where: { id },
+      data: {
+        firstName,
+        lastName,
+        email,
+        phone,
+        classId,
+        sectionId,
+        parentName,
+        parentPhone,
+      },
+    });
+
+    res.json({
+      message: "Student updated successfully",
+      student,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to update student" });
+  }
+};
+
