@@ -106,3 +106,50 @@ exports.updateStudent = async (req, res) => {
   }
 };
 
+ 
+exports.softDeleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const student = await prisma.student.update({
+      where: { id },
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
+      },
+    });
+
+    return res.json({
+      message: "Student removed successfully",
+      student,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Failed to remove student" });
+  }
+};
+
+ 
+
+exports.activateStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const student = await prisma.student.update({
+      where: { id },
+      data: {
+        isActive: true,
+        deletedAt: null,
+      },
+    });
+
+    return res.json({
+      message: "Student activated successfully",
+      student,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Failed to activate student" });
+  }
+};
+
