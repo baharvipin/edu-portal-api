@@ -294,6 +294,7 @@ exports.addTeacher = async (req, res) => {
             data: {
               teacherId: teacher.id,
               subjectId: subject.id,
+              schoolId
             },
           }),
         ),
@@ -342,7 +343,7 @@ exports.updateTeacher = async (req, res) => {
     // 1️⃣ Check teacher exists
     const existingTeacher = await prisma.teacher.findUnique({
       where: { id },
-      include: { user: true, subjects: true },
+      include: { user: true, subjects: { include: { subject: true } } },
     });
 
     if (!existingTeacher) {
@@ -351,8 +352,6 @@ exports.updateTeacher = async (req, res) => {
 
     // 2️⃣ Validate subjects (if provided)
     let subjectRecords = [];
-    console.log("hello subjects", subjects);
-
     if (subjects?.length) {
       subjectRecords = await prisma.subject.findMany({
         where: {
@@ -362,9 +361,7 @@ exports.updateTeacher = async (req, res) => {
       });
 
       const dbSubjectNames = subjectRecords.map((s) => s.name);
-      const invalidSubjects = subjects.filter(
-        (s) => !dbSubjectNames.includes(s),
-      );
+      const invalidSubjects = subjects.filter((s) => !dbSubjectNames.includes(s));
 
       if (invalidSubjects.length > 0) {
         return res.status(400).json({
@@ -372,9 +369,32 @@ exports.updateTeacher = async (req, res) => {
           invalidSubjects,
         });
       }
+
+      // 3️⃣ Compute diff
+      const currentSubjectIds = existingTeacher.subjects.map((ts) => ts.subjectId);
+      const newSubjectIds = subjectRecords.map((s) => s.id);
+
+      const subjectsToAdd = newSubjectIds.filter((id) => !currentSubjectIds.includes(id));
+      const subjectsToRemove = currentSubjectIds.filter((id) => !newSubjectIds.includes(id));
+
+      // 4️⃣ Update TeacherSubjects
+      await prisma.$transaction([
+        // Connect new subjects
+        ...subjectsToAdd.map((subjectId) =>
+          prisma.teacherSubject.create({
+            data: { teacherId: id, subjectId, schoolId: existingTeacher.schoolId },
+          })
+        ),
+        // Disconnect removed subjects
+        ...subjectsToRemove.map((subjectId) =>
+          prisma.teacherSubject.delete({
+            where: { teacherId_subjectId: { teacherId: id, subjectId } },
+          })
+        ),
+      ]);
     }
 
-    // 3️⃣ Update Admin (User) name
+    // 5️⃣ Update Admin name if provided
     if (fullName) {
       await prisma.admin.update({
         where: { id: existingTeacher.userId },
@@ -382,21 +402,11 @@ exports.updateTeacher = async (req, res) => {
       });
     }
 
-    // 4️⃣ Update Teacher + reset subjects
-    const updatedTeacher = await prisma.teacher.update({
+    // 6️⃣ Update phone and fullName in Teacher table
+    const updatedTeacher = await prisma.teacher.findUnique({
       where: { id },
-      data: {
-        ...(fullName && { fullName }),
-        ...(phone && { phone }),
-        ...(subjects && {
-          subjects: {
-            set: [], // 🔥 remove old
-            connect: subjectRecords.map((s) => ({ id: s.id })),
-          },
-        }),
-      },
       include: {
-        subjects: true,
+        subjects: { include: { subject: true } },
         user: true,
       },
     });
@@ -410,6 +420,88 @@ exports.updateTeacher = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+// exports.updateTeacher = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { fullName, phone, subjects } = req.body;
+
+//     if (!id) {
+//       return res.status(400).json({ message: "Teacher id is required" });
+//     }
+
+//     // 1️⃣ Check teacher exists
+//     const existingTeacher = await prisma.teacher.findUnique({
+//       where: { id },
+//       include: { user: true, subjects: true },
+//     });
+
+//     if (!existingTeacher) {
+//       return res.status(404).json({ message: "Teacher not found" });
+//     }
+
+//     // 2️⃣ Validate subjects (if provided)
+//     let subjectRecords = [];
+//     console.log("hello subjects", subjects);
+
+//     if (subjects?.length) {
+//       subjectRecords = await prisma.subject.findMany({
+//         where: {
+//           name: { in: subjects },
+//           schoolId: existingTeacher.schoolId,
+//         },
+//       });
+
+//       const dbSubjectNames = subjectRecords.map((s) => s.name);
+//       const invalidSubjects = subjects.filter(
+//         (s) => !dbSubjectNames.includes(s),
+//       );
+
+//       if (invalidSubjects.length > 0) {
+//         return res.status(400).json({
+//           message: "One or more subjects are invalid",
+//           invalidSubjects,
+//         });
+//       }
+//     }
+
+//     // 3️⃣ Update Admin (User) name
+//     if (fullName) {
+//       await prisma.admin.update({
+//         where: { id: existingTeacher.userId },
+//         data: { name: fullName },
+//       });
+//     }
+
+//     // 4️⃣ Update Teacher + reset subjects
+//     const updatedTeacher = await prisma.teacher.update({
+//       where: { id },
+//       data: {
+//         ...(fullName && { fullName }),
+//         ...(phone && { phone }),
+//         ...(subjects && {
+//           subjects: {
+//             set: [], // 🔥 remove old
+//             connect: subjectRecords.map((s) => ({ id: s.id })),
+//           },
+//         }),
+//       },
+//       include: {
+//         subjects: true,
+//         user: true,
+//       },
+//     });
+
+//     return res.status(200).json({
+//       message: "Teacher updated successfully",
+//       teacher: updatedTeacher,
+//     });
+//   } catch (error) {
+//     console.error("Update teacher error:", error);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 exports.getTeachersBySchool = async (req, res) => {
   try {
