@@ -127,7 +127,6 @@ exports.completeSchoolProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
- 
 
 /**
  * Dashboard overview (ALL DATA IN ONE CALL)

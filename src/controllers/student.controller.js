@@ -146,7 +146,7 @@ exports.activateStudent = async (req, res) => {
     console.error(err);
     return res.status(500).json({ message: "Failed to activate student" });
   }
-}; 
+};
 
 exports.bulkAddStudents = async (req, res) => {
   try {

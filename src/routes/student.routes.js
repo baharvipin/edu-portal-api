@@ -5,7 +5,7 @@ const {
   updateStudent,
   softDeleteStudent,
   activateStudent,
-  bulkAddStudents
+  bulkAddStudents,
 } = require("../controllers/student.controller");
 
 // POST → Add student

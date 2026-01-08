@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const prisma = require("../config/db");
 const authService = require("../services/auth.service");
+const FORCE_PASSWORD_CHANGE_ROLES = ["TEACHER", "STUDENT"];
 
 exports.registerSchool = async (req, res) => {
   try {
@@ -53,66 +54,145 @@ exports.registerSchool = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("Login attempt for email:", password, email);
 
-    const user = await prisma.admin.findUnique({ where: { email } });
-    console.log("User fetched for login:", user);
+    const user = await prisma.admin.findUnique({
+      where: { email },
+    });
+
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const valid = await bcrypt.compare(password, user.password);
-    console.log("Password validation result:", valid);
     if (!valid) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
-      { userId: user.id, schoolId: user.schoolId },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" },
-    );
+    // 🔐 Enforce password change ONLY for Teacher & Student
+    if (FORCE_PASSWORD_CHANGE_ROLES.includes(user.role)) {
+      let mustChangePassword = false;
 
-    let school;
+      if (user.role === "TEACHER") {
+        const teacher = await prisma.teacher.findUnique({
+          where: { userId: user.id },
+          select: { mustChangePassword: true },
+        });
+
+        mustChangePassword = teacher?.mustChangePassword ?? false;
+      }
+
+      if (user.role === "STUDENT") {
+        const student = await prisma.student.findUnique({
+          where: { userId: user.id },
+          select: { mustChangePassword: true },
+        });
+
+        mustChangePassword = student?.mustChangePassword ?? false;
+      }
+
+      if (mustChangePassword) {
+        return res.status(200).json({
+          mustChangePassword: true,
+          userId: user.id,
+          role: user.role,
+          message: "Please change your temporary password",
+        });
+      }
+    }
+
+    // 🏫 Validate school
+    let school = null;
     if (user.schoolId) {
-      school = await prisma.school.findUnique({ where: { id: user.schoolId } });
+      school = await prisma.school.findUnique({
+        where: { id: user.schoolId },
+      });
+
       if (!school || !school.isActive) {
         return res.status(403).json({ message: "School is not active" });
       }
     }
 
-    const responsePayload = {
+    // 🔑 JWT
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role,
+        schoolId: user.schoolId,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" },
+    );
+
+    res.json({
       token,
       user: {
         id: user.id,
-        name: user.name,
         email: user.email,
-        schoolId: user.schoolId,
-        isActive: user.isActive,
         userRole: user.role,
+        schoolId: user.schoolId,
       },
-      school: user.schoolId
-        ? {
-            id: school.id,
-            name: school.name,
-            isActive: school.isActive,
-            status: school.status,
-            profileCompleted: school.profileCompleted,
-            system: school.system,
-            board: school.board,
-            city: school.city,
-            state: school.state,
-            email: school.email,
-            createdAt: school.createdAt,
-            updatedAt: school.updatedAt,
-          }
-        : null,
-    };
-    console.log("Login successful for data:", responsePayload);
-
-    res.json(responsePayload);
+      school,
+    });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    console.log("Request Body:", req.body);
+    const { newPassword, userId: adminId, role } = req.body;
+
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters long",
+      });
+    }
+
+    // 🔒 Only Teacher & Student allowed
+    // if (!["TEACHER", "STUDENT"].includes(role)) {
+    //   return res.status(403).json({
+    //     message: "Password change not allowed for this role",
+    //   });
+    // }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.$transaction(async (tx) => {
+      // 🔑 Update admin login password
+      await tx.admin.update({
+        where: { id: adminId },
+        data: {
+          password: hashedPassword,
+          status: "ACTIVE",
+        },
+      });
+
+      // 🔄 Reset mustChangePassword flag
+      if (role === "TEACHER") {
+        await tx.teacher.update({
+          where: { userId: adminId },
+          data: { mustChangePassword: false },
+        });
+      }
+
+      if (role === "STUDENT") {
+        await tx.student.update({
+          where: { userId: adminId },
+          data: { mustChangePassword: false },
+        });
+      }
+    });
+
+    res.json({
+      message: "Password updated successfully",
+      forceLogout: true,
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({
+      message: "Failed to update password",
+    });
   }
 };

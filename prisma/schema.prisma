@@ -7,70 +7,71 @@ datasource db {
 }
 
 model School {
-  id               String   @id @default(uuid())
-  name             String
-  board            String
-  city             String
-  state            String
-  email            String   @unique
-  system           String?
+  id     String  @id @default(uuid())
+  name   String
+  board  String
+  city   String
+  state  String
+  email  String  @unique
+  system String?
 
-  profileCompleted Boolean  @default(false)
-  isActive         Boolean  @default(true)
+  profileCompleted Boolean      @default(false)
+  isActive         Boolean      @default(true)
   status           SchoolStatus @default(PROFILE_INCOMPLETE)
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  admins           Admin[]
-  profile         SchoolProfile?
-  teachers  Teacher[] 
-  classes   Class[]
-  sections  Section[]
-  students  Student[]
+  admins   Admin[]
+  profile  SchoolProfile?
+  teachers Teacher[]
+  classes  Class[]
+  sections Section[]
+  students Student[]
 }
 
 model Admin {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
 
-  schoolId  String?
-  school    School?  @relation(fields: [schoolId], references: [id])
+  schoolId String?
+  school   School? @relation(fields: [schoolId], references: [id])
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
-  role      Role @default(NONE)
+  role      Role     @default(NONE)
 
-  teacher   Teacher?
-  status    UserStatus @default(INVITED)
+  teacher Teacher?
+  student Student? // ✅ ADD THIS
+  status  UserStatus @default(INVITED)
 }
 
 model Teacher {
-  id         String   @id @default(uuid())
-  userId     String   @unique
-  schoolId   String
-  fullName   String
-  email      String?
-  phone      String?
-  subjects   Subject[]  @relation("TeacherSubjects")
-  isActive   Boolean    @default(false)
-  user       Admin     @relation(fields: [userId], references: [id])
-  school     School   @relation(fields: [schoolId], references: [id])
+  id                 String    @id @default(uuid())
+  userId             String    @unique
+  schoolId           String
+  fullName           String
+  email              String?
+  phone              String?
+  subjects           TeacherSubject[]
+  isActive           Boolean   @default(false)
+  mustChangePassword Boolean   @default(true) // 👈 NEW COLUMN
+  user               Admin     @relation(fields: [userId], references: [id])
+  school             School    @relation(fields: [schoolId], references: [id])
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Subject {
-  id        String   @id @default(dbgenerated("gen_random_uuid()"))
-  code      String?   // optional field, can be required if you want
+  id       String  @id @default(dbgenerated("gen_random_uuid()"))
+  code     String? // optional field, can be required if you want
   name     String
   schoolId String
-
-  teachers Teacher[] @relation("TeacherSubjects")
+ 
+  teacherSubjects TeacherSubject[] // ✅ REQUIRED
 }
-
 
 enum UserStatus {
   INVITED
@@ -78,49 +79,46 @@ enum UserStatus {
   SUSPENDED
 }
 
-
 model SchoolProfile {
-  id                    String   @id @default(uuid())
-  schoolId              String   @unique
-  school                School   @relation(fields: [schoolId], references: [id])
+  id       String @id @default(uuid())
+  schoolId String @unique
+  school   School @relation(fields: [schoolId], references: [id])
 
-  fullAddress            String
-  registrationNumber     String
-  medium                 String
-  yearEstablished        Int
+  fullAddress        String
+  registrationNumber String
+  medium             String
+  yearEstablished    Int
 
-  classes                String
-  academicYear           String
-  schoolTimings          String
-  gradingSystem          String
+  classes       String
+  academicYear  String
+  schoolTimings String
+  gradingSystem String
 
-  hasLabs                Boolean  @default(false)
-  hasTransport           Boolean  @default(false)
-  hasHostel              Boolean  @default(false)
+  hasLabs      Boolean @default(false)
+  hasTransport Boolean @default(false)
+  hasHostel    Boolean @default(false)
 
-  logoUrl                String?
-  registrationCertUrl    String?
-  boardAffiliationUrl    String?
+  logoUrl             String?
+  registrationCertUrl String?
+  boardAffiliationUrl String?
 
-  attendanceMode         String
-  notificationMode       String
+  attendanceMode   String
+  notificationMode String
 
-  examsModuleEnabled     Boolean  @default(false)
-  homeworkModuleEnabled  Boolean  @default(false)
+  examsModuleEnabled    Boolean @default(false)
+  homeworkModuleEnabled Boolean @default(false)
 
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
- 
-
 enum SchoolStatus {
-  PROFILE_INCOMPLETE      // Just registered
-  PROFILE_SUBMITTED       // Profile completed, waiting for approval
-  ACTIVE                  // Approved & live
-  INACTIVE                // Admin deactivated
-  SUSPENDED               // Policy violation
-  REJECTED                // Rejected by SuperAdmin
+  PROFILE_INCOMPLETE // Just registered
+  PROFILE_SUBMITTED // Profile completed, waiting for approval
+  ACTIVE // Approved & live
+  INACTIVE // Admin deactivated
+  SUSPENDED // Policy violation
+  REJECTED // Rejected by SuperAdmin
 }
 
 enum Role {
@@ -131,69 +129,84 @@ enum Role {
   NONE
 }
 
-
 model Student {
-  id           String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  schoolId     String
-  firstName    String
-  lastName     String
-  email        String   @unique
-  phone        String
+ userId    String? @unique   // 👈 make optional temporarily
+  schoolId  String
+  firstName String
+  lastName  String
+  email     String @unique
+  phone     String
 
-  classId      String
-  sectionId    String
+  classId   String
+  sectionId String
 
-  parentName   String
-  parentPhone  String
+  parentName  String
+  parentPhone String
 
-  isActive     Boolean  @default(false)
-  deletedAt    DateTime?
+  isActive  Boolean   @default(false)
+  deletedAt DateTime?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  school       School   @relation(fields: [schoolId], references: [id])
-  class        Class    @relation(fields: [classId], references: [id])
-  section      Section  @relation(fields: [sectionId], references: [id])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  mustChangePassword Boolean  @default(true) // 👈 REQUIRED
+  user               Admin?    @relation(fields: [userId], references: [id])
+  school             School   @relation(fields: [schoolId], references: [id])
+  class              Class    @relation(fields: [classId], references: [id])
+  section            Section  @relation(fields: [sectionId], references: [id])
 }
 
-
 model Class {
-  id          String    @id @default(uuid())
+  id          String @id @default(uuid())
   schoolId    String
-  name        String    // e.g. "1", "2", "10", "12"
-  displayName String    // e.g. "Class 10"
-  order       Int?      // for sorting (optional)
+  name        String // e.g. "1", "2", "10", "12"
+  displayName String // e.g. "Class 10"
+  order       Int? // for sorting (optional)
 
-  isActive    Boolean   @default(true)
-  deletedAt   DateTime?
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  school      School    @relation(fields: [schoolId], references: [id])
-  sections    Section[]
-  students    Student[]
+  school   School    @relation(fields: [schoolId], references: [id])
+  sections Section[]
+  students Student[]
 
   @@unique([schoolId, name])
 }
 
 model Section {
-  id         String   @id @default(uuid())
-  schoolId   String
-  classId    String
-  name       String   // A, B, C
+  id       String @id @default(uuid())
+  schoolId String
+  classId  String
+  name     String // A, B, C
 
-  isActive   Boolean  @default(true)
-  deletedAt  DateTime?
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  school     School   @relation(fields: [schoolId], references: [id])
-  class      Class    @relation(fields: [classId], references: [id])
-  students   Student[]
+  school   School    @relation(fields: [schoolId], references: [id])
+  class    Class     @relation(fields: [classId], references: [id])
+  students Student[]
 
   @@unique([classId, name])
+}
+model TeacherSubject {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+
+  teacherId String
+  subjectId String
+  schoolId  String
+
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  assignedAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+
+  @@unique([teacherId, subjectId])
 }
