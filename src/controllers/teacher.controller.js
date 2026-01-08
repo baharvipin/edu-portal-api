@@ -618,6 +618,16 @@ exports.getTeacherDashboard = async (req, res) => {
        where: { teacherId }
      });
 
+     const subjects = await prisma.subject.findMany();
+    
+      teacherSubjects.forEach(ts => {
+        const subject = subjects.find(s => s.id == ts.subjectId);
+        if (subject) {
+          ts.subject = subject;
+        }
+      });
+       console.log("Subjects found:", subjects, teacherSubjects);
+
     // // 3️⃣ Today Schedule
     // const today = new Date();
     // today.setHours(0, 0, 0, 0);
@@ -662,7 +672,7 @@ exports.getTeacherDashboard = async (req, res) => {
          classId: t?.classId,
          className: t?.class?.name,
          section: t?.class?.section,
-         subject: t?.subjectId
+         subject: t?.subject,
        })),
       pendingActions,
       recentActivities: [
