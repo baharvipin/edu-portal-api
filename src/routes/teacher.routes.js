@@ -10,7 +10,7 @@ const {
 } = require("../controllers/teacher.controller");
 
 // ✅ Specific routes FIRST
-router.get("/dashboard", auth, getTeacherDashboard);
+router.get("/dashboard/:teacherId", auth, getTeacherDashboard);
 // GET teachers by schoolId
 router.get("/:schoolId", auth, getTeachersBySchool);
 router.post("/addTeacher", auth, addTeacher);

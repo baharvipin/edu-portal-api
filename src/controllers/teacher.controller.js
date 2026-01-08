@@ -276,6 +276,7 @@ exports.addTeacher = async (req, res) => {
       });
 
       // Create Teacher
+
       const teacher = await tx.teacher.create({
         data: {
           userId: adminUser.id,
@@ -598,9 +599,9 @@ exports.deActivateTeacher = async (req, res) => {
 
 exports.getTeacherDashboard = async (req, res) => {
   try {
-    const teacherId = req?.user?.id; // from JWT
-    console.log("Teacher ID:", req.user);
-
+    //const teacherId = req?.user?.id; // from JWT 
+    const { teacherId } = req.params;
+    console.log("Fetching dashboard for teacherId:",teacherId);
     // 1️⃣ Teacher Info
     const teacher = await prisma.teacher.findUnique({
       where: { id: teacherId },
@@ -613,12 +614,9 @@ exports.getTeacherDashboard = async (req, res) => {
     });
 
     // // 2️⃣ Assigned Subjects & Classes
-    // const teacherSubjects = await prisma.teacherSubject.findMany({
-    //   where: { teacherId },
-    //   include: {
-    //     class: true
-    //   }
-    // });
+     const teacherSubjects = await prisma.teacherSubject.findMany({
+       where: { teacherId }
+     });
 
     // // 3️⃣ Today Schedule
     // const today = new Date();
@@ -632,13 +630,13 @@ exports.getTeacherDashboard = async (req, res) => {
     // });
 
     // // 4️⃣ Summary counts
-    // const subjectsCount = new Set(
-    //   teacherSubjects.map(t => t.subjectId)
-    // ).size;
+     const subjectsCount = new Set(
+       teacherSubjects.map(t => t.subjectId)
+     ).size;
 
-    // const classesCount = new Set(
-    //   teacherSubjects.map(t => t.classId)
-    // ).size;
+      // const classesCount = new Set(
+      //   teacherSubjects.map(t => t.classId)
+      // ).size;
 
     // Dummy logic (replace later)
     const studentsCount = 120;
@@ -649,21 +647,23 @@ exports.getTeacherDashboard = async (req, res) => {
       assignmentsToReview: 5,
     };
 
+    console.log("Dashboard data prepared", teacherSubjects);
+
     res.json({
       teacher,
       summary: {
-        // subjectsCount,
+         subjectsCount,
         // classesCount,
         studentsCount,
         // todaysClassesCount: todaySchedule.length
       },
       //todaySchedule,
-      // myClasses: teacherSubjects.map(t => ({
-      //   classId: t.classId,
-      //   className: t.class.name,
-      //   section: t.class.section,
-      //   subject: t.subjectId
-      // })),
+       myClasses: teacherSubjects.map(t => ({
+         classId: t?.classId,
+         className: t?.class?.name,
+         section: t?.class?.section,
+         subject: t?.subjectId
+       })),
       pendingActions,
       recentActivities: [
         "Attendance marked for Class 8A",

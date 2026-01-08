@@ -59,6 +59,8 @@ exports.login = async (req, res) => {
       where: { email },
     });
 
+    console.log("Login attempt for user:", email, user );
+
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -67,22 +69,25 @@ exports.login = async (req, res) => {
     if (!valid) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-
+let teacher = null;
+  let student = null;
     // 🔐 Enforce password change ONLY for Teacher & Student
     if (FORCE_PASSWORD_CHANGE_ROLES.includes(user.role)) {
       let mustChangePassword = false;
 
+      
       if (user.role === "TEACHER") {
-        const teacher = await prisma.teacher.findUnique({
-          where: { userId: user.id },
-          select: { mustChangePassword: true },
+         teacher = await prisma.teacher.findUnique({
+          where: { userId: user.id }
         });
 
         mustChangePassword = teacher?.mustChangePassword ?? false;
+        console.log("Teacher mustChangePassword:", teacher);
       }
 
+    
       if (user.role === "STUDENT") {
-        const student = await prisma.student.findUnique({
+          student = await prisma.student.findUnique({
           where: { userId: user.id },
           select: { mustChangePassword: true },
         });
@@ -118,6 +123,8 @@ exports.login = async (req, res) => {
         userId: user.id,
         role: user.role,
         schoolId: user.schoolId,
+        teacherId: teacher?.id || null,
+        studentId: student?.id || null,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" },
@@ -130,6 +137,8 @@ exports.login = async (req, res) => {
         email: user.email,
         userRole: user.role,
         schoolId: user.schoolId,
+        teacherId: teacher?.id || null,
+        studentId: student?.id || null,
       },
       school,
     });
