@@ -70,6 +70,9 @@ model Subject {
   code     String? // optional field, can be required if you want
   name     String
   schoolId String
+  classId  String?
+  sectionId String?
+  isActive  Boolean?
 
   teacherSubjects TeacherSubject[] // ✅ REQUIRED
   assignments     TeachingAssignment[] // ✅ opposite relation

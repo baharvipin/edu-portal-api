@@ -11,12 +11,15 @@ exports.getSubjectsBySchool = async (req, res) => {
     }
 
     const subjects = await prisma.subject.findMany({
-      where: { schoolId },
+      where: { schoolId, isActive: true  },
       select: {
         id: true,
         name: true,
         schoolId: true,
         code: true,
+        sectionId: true,
+        classId: true,
+        isActive: true,
       },
       orderBy: {
         name: "asc",
@@ -40,7 +43,7 @@ exports.getSubjectsBySchool = async (req, res) => {
  */
 exports.createSubject = async (req, res) => {
   try {
-    const { code, name, schoolId } = req.body;
+    const { code, name, schoolId, sectionId, classId } = req.body;
 
     // Validation
     if (!name || !schoolId) {
@@ -49,7 +52,7 @@ exports.createSubject = async (req, res) => {
 
     // Create subject
     const newSubject = await prisma.subject.create({
-      data: { code, name, schoolId },
+      data: { code, name, schoolId, sectionId, classId, isActive: true },
     });
 
     return res.status(201).json(newSubject);
@@ -124,10 +127,14 @@ exports.deleteSubject = async (req, res) => {
       return res.status(404).json({ error: "Subject not found" });
     }
 
-    // Delete subject
-    await prisma.subject.delete({
-      where: { id },
-    });
+   // Soft delete subject
+await prisma.subject.update({
+  where: { id },
+  data: {
+    isActive: false,
+  },
+});
+
 
     return res.status(200).json({
       message: "Subject deleted successfully",

@@ -14,6 +14,6 @@ router.get("/:schoolId", getSubjectsBySchool);
 router.post("/addSubject", createSubject);
 // routes/subject.routes.js
 router.put("/:id", updateSubject);
-router.delete("/:id", deleteSubject);
+router.patch("/:id", deleteSubject);
 
 module.exports = router;
