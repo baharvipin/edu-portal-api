@@ -22,12 +22,13 @@ model School {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  admins   Admin[]
-  profile  SchoolProfile?
-  teachers Teacher[]
-  classes  Class[]
-  sections Section[]
-  students Student[]
+  admins      Admin[]
+  profile     SchoolProfile?
+  teachers    Teacher[]
+  classes     Class[]
+  sections    Section[]
+  students    Student[]
+  assignments TeachingAssignment[] // ✅ opposite relation
 }
 
 model Admin {
@@ -49,19 +50,19 @@ model Admin {
 }
 
 model Teacher {
-  id                 String    @id @default(uuid())
-  userId             String    @unique
+  id                 String               @id @default(uuid())
+  userId             String               @unique
   schoolId           String
   fullName           String
   email              String?
   phone              String?
   subjects           TeacherSubject[]
-  isActive           Boolean   @default(false)
-  mustChangePassword Boolean   @default(true) // 👈 NEW COLUMN
-  user               Admin     @relation(fields: [userId], references: [id])
-  school             School    @relation(fields: [schoolId], references: [id])
-
-  createdAt DateTime @default(now())
+  isActive           Boolean              @default(false)
+  mustChangePassword Boolean              @default(true) // 👈 NEW COLUMN
+  user               Admin                @relation(fields: [userId], references: [id])
+  school             School               @relation(fields: [schoolId], references: [id])
+  assignments        TeachingAssignment[] // ✅ opposite relation
+  createdAt          DateTime             @default(now())
 }
 
 model Subject {
@@ -69,8 +70,9 @@ model Subject {
   code     String? // optional field, can be required if you want
   name     String
   schoolId String
- 
+
   teacherSubjects TeacherSubject[] // ✅ REQUIRED
+  assignments     TeachingAssignment[] // ✅ opposite relation
 }
 
 enum UserStatus {
@@ -132,11 +134,11 @@ enum Role {
 model Student {
   id String @id @default(uuid())
 
- userId    String? @unique   // 👈 make optional temporarily
+  userId    String? @unique // 👈 make optional temporarily
   schoolId  String
   firstName String
   lastName  String
-  email     String @unique
+  email     String  @unique
   phone     String
 
   classId   String
@@ -151,7 +153,7 @@ model Student {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   mustChangePassword Boolean  @default(true) // 👈 REQUIRED
-  user               Admin?    @relation(fields: [userId], references: [id])
+  user               Admin?   @relation(fields: [userId], references: [id])
   school             School   @relation(fields: [schoolId], references: [id])
   class              Class    @relation(fields: [classId], references: [id])
   section            Section  @relation(fields: [sectionId], references: [id])
@@ -170,9 +172,10 @@ model Class {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  school   School    @relation(fields: [schoolId], references: [id])
-  sections Section[]
-  students Student[]
+  school      School               @relation(fields: [schoolId], references: [id])
+  sections    Section[]
+  students    Student[]
+  assignments TeachingAssignment[] // ✅ opposite relation
 
   @@unique([schoolId, name])
 }
@@ -189,24 +192,47 @@ model Section {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  school   School    @relation(fields: [schoolId], references: [id])
-  class    Class     @relation(fields: [classId], references: [id])
-  students Student[]
+  school      School               @relation(fields: [schoolId], references: [id])
+  class       Class                @relation(fields: [classId], references: [id])
+  students    Student[]
+  assignments TeachingAssignment[] // ✅ opposite relation
 
   @@unique([classId, name])
 }
+
 model TeacherSubject {
-  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  id String @id @default(dbgenerated("gen_random_uuid()"))
 
   teacherId String
   subjectId String
   schoolId  String
 
-  teacher   Teacher @relation(fields: [teacherId], references: [id])
-  subject   Subject @relation(fields: [subjectId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
 
   assignedAt DateTime @default(now())
   isActive   Boolean  @default(true)
 
   @@unique([teacherId, subjectId])
+}
+
+model TeachingAssignment {
+  id String @id @default(uuid())
+
+  schoolId  String
+  teacherId String
+  subjectId String
+  classId   String
+  sectionId String
+
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+  class   Class   @relation(fields: [classId], references: [id])
+  section Section @relation(fields: [sectionId], references: [id])
+  school  School  @relation(fields: [schoolId], references: [id])
+
+  createdAt DateTime @default(now())
+  isActive  Boolean  @default(true)
+
+  @@unique([teacherId, subjectId, classId, sectionId])
 }

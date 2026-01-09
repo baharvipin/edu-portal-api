@@ -684,4 +684,142 @@ exports.getTeacherDashboard = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "Dashboard load failed" });
   }
+}; 
+
+exports.getSchoolTeacherAssignments = async (req, res) => {
+  try {
+    const { schoolId } = req.params;
+
+    if (!schoolId) {
+      return res.status(400).json({ message: "schoolId is required" });
+    }
+
+    const teachers = await prisma.teachingAssignment.findMany({
+      where: {
+        schoolId,
+      },
+      
+      select: {
+        id: true,
+       
+        teacher : { 
+          select: { 
+            id: true, 
+            fullName: true,
+            email: true,
+            phone: true,
+             assignments: {
+          select: {
+            id: true,
+            class: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            section: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            subject: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
+          },
+        },
+       } 
+        },       
+      },
+    });
+
+    return res.status(200).json(teachers);
+  } catch (error) {
+    console.error("School teacher assignments error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+ 
+
+exports.assignTeacher = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    const { schoolId, classId, sectionId, subjectId } = req.body;
+
+    // 1. Basic validation
+    if (!teacherId || !schoolId || !classId || !sectionId || !subjectId) {
+      return res.status(400).json({
+        message: "teacherId, schoolId, classId, sectionId, subjectId are required",
+      });
+    }
+
+    // 2. Ensure teacher belongs to same school
+    const teacher = await prisma.teacher.findFirst({
+      where: { id: teacherId, schoolId },
+    });
+
+    if (!teacher) {
+      return res.status(404).json({
+        message: "Teacher not found in this school",
+      });
+    }
+
+    // 3. Prevent duplicate assignment (real-world rule)
+    const existing = await prisma.teachingAssignment.findFirst({
+      where: {
+        teacherId,
+        schoolId,
+        classId,
+        sectionId,
+        subjectId,
+        isActive: true,
+      },
+    });
+
+    if (existing) {
+      return res.status(409).json({
+        message: "This assignment already exists",
+      });
+    }
+
+    // 4. Create assignment
+    const assignment = await prisma.teachingAssignment.create({
+      data: {
+        teacherId,
+        schoolId,
+        classId,
+        sectionId,
+        subjectId,
+      },
+      include: {
+        teacher: { select: { id: true, fullName: true } },
+        class: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } },
+        subject: { select: { id: true, name: true, code: true } },
+      },
+    });
+
+    return res.status(201).json({
+      message: "Teacher assigned successfully",
+      assignment,
+    });
+  } catch (error) {
+    console.error("Assign teacher error:", error);
+
+    // Prisma unique constraint error safety
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        message: "Duplicate assignment not allowed",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
 };

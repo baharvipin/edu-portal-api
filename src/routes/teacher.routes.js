@@ -7,6 +7,8 @@ const {
   activateTeacher,
   deActivateTeacher,
   getTeacherDashboard,
+  getSchoolTeacherAssignments,
+  assignTeacher,
 } = require("../controllers/teacher.controller");
 
 // ✅ Specific routes FIRST
@@ -17,5 +19,18 @@ router.post("/addTeacher", auth, addTeacher);
 router.put("/:id", auth, updateTeacher);
 router.put("/activate/:teacherId", auth, activateTeacher);
 router.put("/deactivate/:teacherId", auth, deActivateTeacher);
+
+router.get(
+  "/:schoolId/teacher-assignments",
+  auth,
+  getSchoolTeacherAssignments
+);
+
+router.post(
+  "/:teacherId/assignments",
+  auth,
+  assignTeacher
+);
+
 
 module.exports = router;
