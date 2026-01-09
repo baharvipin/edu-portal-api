@@ -9,6 +9,7 @@ const {
   getTeacherDashboard,
   getSchoolTeacherAssignments,
   assignTeacher,
+  updateTeacherAssignment
 } = require("../controllers/teacher.controller");
 
 // ✅ Specific routes FIRST
@@ -31,6 +32,11 @@ router.post(
   auth,
   assignTeacher
 );
+
+// --------------------------
+// Update an existing assignment
+// --------------------------
+router.put("/assignments/:assignmentId", auth, updateTeacherAssignment);
 
 
 module.exports = router;

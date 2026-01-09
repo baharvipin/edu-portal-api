@@ -823,3 +823,86 @@ exports.assignTeacher = async (req, res) => {
     });
   }
 };
+
+
+exports.updateTeacherAssignment = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const { schoolId, classId, sectionId, subjectId } = req.body;
+
+    // 1️⃣ Basic validation
+    if (!assignmentId || !schoolId || !classId || !sectionId || !subjectId) {
+      return res.status(400).json({
+        message: "assignmentId, schoolId, classId, sectionId, subjectId are required",
+      });
+    }
+
+    // 2️⃣ Ensure assignment exists
+    const existingAssignment = await prisma.teachingAssignment.findUnique({
+      where: { id: assignmentId },
+    });
+
+    if (!existingAssignment) {
+      return res.status(404).json({ message: "Assignment not found" });
+    }
+
+    // 3️⃣ Ensure teacher belongs to same school
+    const teacher = await prisma.teacher.findUnique({
+      where: { id: existingAssignment.teacherId },
+    });
+
+    if (!teacher || teacher.schoolId !== schoolId) {
+      return res.status(400).json({ message: "Teacher does not belong to this school" });
+    }
+
+    // 4️⃣ Prevent duplicate assignment (same teacher + class + section + subject)
+    const duplicate = await prisma.teachingAssignment.findFirst({
+      where: {
+        teacherId: existingAssignment.teacherId,
+        schoolId,
+        classId,
+        sectionId,
+        subjectId,
+        isActive: true,
+        NOT: { id: assignmentId }, // Exclude current record
+      },
+    });
+
+    if (duplicate) {
+      return res.status(409).json({
+        message: "This assignment already exists",
+      });
+    }
+
+    // 5️⃣ Update assignment
+    const updatedAssignment = await prisma.teachingAssignment.update({
+      where: { id: assignmentId },
+      data: {
+        classId,
+        sectionId,
+        subjectId,
+      },
+      include: {
+        teacher: { select: { id: true, fullName: true } },
+        class: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } },
+        subject: { select: { id: true, name: true, code: true } },
+      },
+    });
+
+    return res.status(200).json({
+      message: "Assignment updated successfully",
+      assignment: updatedAssignment,
+    });
+  } catch (error) {
+    console.error("Update teacher assignment error:", error);
+
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        message: "Duplicate assignment not allowed",
+      });
+    }
+
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
