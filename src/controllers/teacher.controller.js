@@ -906,3 +906,44 @@ exports.updateTeacherAssignment = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+exports.deleteTeacherAssignment = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+
+    // 1️⃣ Validate
+    if (!assignmentId) {
+      return res.status(400).json({
+        message: "assignmentId is required",
+      });
+    }
+
+    // 2️⃣ Check existence
+    const existingAssignment = await prisma.teachingAssignment.findUnique({
+      where: { id: assignmentId },
+    });
+
+    if (!existingAssignment) {
+      return res.status(404).json({
+        message: "Assignment not found",
+      });
+    }
+
+    // 3️⃣ Hard delete
+    await prisma.teachingAssignment.delete({
+      where: { id: assignmentId },
+    });
+
+    return res.status(200).json({
+      message: "Assignment deleted successfully",
+      assignmentId,
+    });
+  } catch (error) {
+    console.error("Delete teacher assignment error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
