@@ -59,7 +59,7 @@ exports.login = async (req, res) => {
       where: { email },
     });
 
-    console.log("Login attempt for user:", email, user );
+    console.log("Login attempt for user:", email, user);
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -69,25 +69,23 @@ exports.login = async (req, res) => {
     if (!valid) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-let teacher = null;
-  let student = null;
+    let teacher = null;
+    let student = null;
     // 🔐 Enforce password change ONLY for Teacher & Student
     if (FORCE_PASSWORD_CHANGE_ROLES.includes(user.role)) {
       let mustChangePassword = false;
 
-      
       if (user.role === "TEACHER") {
-         teacher = await prisma.teacher.findUnique({
-          where: { userId: user.id }
+        teacher = await prisma.teacher.findUnique({
+          where: { userId: user.id },
         });
 
         mustChangePassword = teacher?.mustChangePassword ?? false;
         console.log("Teacher mustChangePassword:", teacher);
       }
 
-    
       if (user.role === "STUDENT") {
-          student = await prisma.student.findUnique({
+        student = await prisma.student.findUnique({
           where: { userId: user.id },
           select: { mustChangePassword: true },
         });

@@ -258,7 +258,6 @@ exports.bulkAddStudents = async (req, res) => {
   }
 };
 
-
 exports.assignSubjectsToStudent = async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -268,7 +267,7 @@ exports.assignSubjectsToStudent = async (req, res) => {
       return res.status(400).json({ message: "Invalid payload" });
     }
 
-    const data = subjectIds.map(subjectId => ({
+    const data = subjectIds.map((subjectId) => ({
       studentId,
       subjectId,
       schoolId,
@@ -287,4 +286,3 @@ exports.assignSubjectsToStudent = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-

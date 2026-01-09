@@ -22,17 +22,9 @@ router.put("/:id", auth, updateTeacher);
 router.put("/activate/:teacherId", auth, activateTeacher);
 router.put("/deactivate/:teacherId", auth, deActivateTeacher);
 
-router.get(
-  "/:schoolId/teacher-assignments",
-  auth,
-  getSchoolTeacherAssignments
-);
+router.get("/:schoolId/teacher-assignments", auth, getSchoolTeacherAssignments);
 
-router.post(
-  "/:teacherId/assignments",
-  auth,
-  assignTeacher
-);
+router.post("/:teacherId/assignments", auth, assignTeacher);
 
 // --------------------------
 // Update an existing assignment
@@ -42,8 +34,7 @@ router.put("/assignments/:assignmentId", auth, updateTeacherAssignment);
 router.delete(
   "/assignments/delete/:assignmentId",
   auth,
-  deleteTeacherAssignment
+  deleteTeacherAssignment,
 );
-
 
 module.exports = router;

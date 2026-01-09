@@ -295,7 +295,7 @@ exports.addTeacher = async (req, res) => {
             data: {
               teacherId: teacher.id,
               subjectId: subject.id,
-              schoolId
+              schoolId,
             },
           }),
         ),
@@ -362,7 +362,9 @@ exports.updateTeacher = async (req, res) => {
       });
 
       const dbSubjectNames = subjectRecords.map((s) => s.name);
-      const invalidSubjects = subjects.filter((s) => !dbSubjectNames.includes(s));
+      const invalidSubjects = subjects.filter(
+        (s) => !dbSubjectNames.includes(s),
+      );
 
       if (invalidSubjects.length > 0) {
         return res.status(400).json({
@@ -372,25 +374,35 @@ exports.updateTeacher = async (req, res) => {
       }
 
       // 3️⃣ Compute diff
-      const currentSubjectIds = existingTeacher.subjects.map((ts) => ts.subjectId);
+      const currentSubjectIds = existingTeacher.subjects.map(
+        (ts) => ts.subjectId,
+      );
       const newSubjectIds = subjectRecords.map((s) => s.id);
 
-      const subjectsToAdd = newSubjectIds.filter((id) => !currentSubjectIds.includes(id));
-      const subjectsToRemove = currentSubjectIds.filter((id) => !newSubjectIds.includes(id));
+      const subjectsToAdd = newSubjectIds.filter(
+        (id) => !currentSubjectIds.includes(id),
+      );
+      const subjectsToRemove = currentSubjectIds.filter(
+        (id) => !newSubjectIds.includes(id),
+      );
 
       // 4️⃣ Update TeacherSubjects
       await prisma.$transaction([
         // Connect new subjects
         ...subjectsToAdd.map((subjectId) =>
           prisma.teacherSubject.create({
-            data: { teacherId: id, subjectId, schoolId: existingTeacher.schoolId },
-          })
+            data: {
+              teacherId: id,
+              subjectId,
+              schoolId: existingTeacher.schoolId,
+            },
+          }),
         ),
         // Disconnect removed subjects
         ...subjectsToRemove.map((subjectId) =>
           prisma.teacherSubject.delete({
             where: { teacherId_subjectId: { teacherId: id, subjectId } },
-          })
+          }),
         ),
       ]);
     }
@@ -421,7 +433,6 @@ exports.updateTeacher = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 // exports.updateTeacher = async (req, res) => {
 //   try {
@@ -599,9 +610,9 @@ exports.deActivateTeacher = async (req, res) => {
 
 exports.getTeacherDashboard = async (req, res) => {
   try {
-    //const teacherId = req?.user?.id; // from JWT 
+    //const teacherId = req?.user?.id; // from JWT
     const { teacherId } = req.params;
-    console.log("Fetching dashboard for teacherId:",teacherId);
+    console.log("Fetching dashboard for teacherId:", teacherId);
     // 1️⃣ Teacher Info
     const teacher = await prisma.teacher.findUnique({
       where: { id: teacherId },
@@ -614,19 +625,19 @@ exports.getTeacherDashboard = async (req, res) => {
     });
 
     // // 2️⃣ Assigned Subjects & Classes
-     const teacherSubjects = await prisma.teacherSubject.findMany({
-       where: { teacherId }
-     });
+    const teacherSubjects = await prisma.teacherSubject.findMany({
+      where: { teacherId },
+    });
 
-     const subjects = await prisma.subject.findMany();
-    
-      teacherSubjects.forEach(ts => {
-        const subject = subjects.find(s => s.id == ts.subjectId);
-        if (subject) {
-          ts.subject = subject;
-        }
-      });
-       console.log("Subjects found:", subjects, teacherSubjects);
+    const subjects = await prisma.subject.findMany();
+
+    teacherSubjects.forEach((ts) => {
+      const subject = subjects.find((s) => s.id == ts.subjectId);
+      if (subject) {
+        ts.subject = subject;
+      }
+    });
+    console.log("Subjects found:", subjects, teacherSubjects);
 
     // // 3️⃣ Today Schedule
     // const today = new Date();
@@ -640,13 +651,11 @@ exports.getTeacherDashboard = async (req, res) => {
     // });
 
     // // 4️⃣ Summary counts
-     const subjectsCount = new Set(
-       teacherSubjects.map(t => t.subjectId)
-     ).size;
+    const subjectsCount = new Set(teacherSubjects.map((t) => t.subjectId)).size;
 
-      // const classesCount = new Set(
-      //   teacherSubjects.map(t => t.classId)
-      // ).size;
+    // const classesCount = new Set(
+    //   teacherSubjects.map(t => t.classId)
+    // ).size;
 
     // Dummy logic (replace later)
     const studentsCount = 120;
@@ -662,18 +671,18 @@ exports.getTeacherDashboard = async (req, res) => {
     res.json({
       teacher,
       summary: {
-         subjectsCount,
+        subjectsCount,
         // classesCount,
         studentsCount,
         // todaysClassesCount: todaySchedule.length
       },
       //todaySchedule,
-       myClasses: teacherSubjects.map(t => ({
-         classId: t?.classId,
-         className: t?.class?.name,
-         section: t?.class?.section,
-         subject: t?.subject,
-       })),
+      myClasses: teacherSubjects.map((t) => ({
+        classId: t?.classId,
+        className: t?.class?.name,
+        section: t?.class?.section,
+        subject: t?.subject,
+      })),
       pendingActions,
       recentActivities: [
         "Attendance marked for Class 8A",
@@ -684,7 +693,7 @@ exports.getTeacherDashboard = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "Dashboard load failed" });
   }
-}; 
+};
 
 exports.getSchoolTeacherAssignments = async (req, res) => {
   try {
@@ -698,42 +707,42 @@ exports.getSchoolTeacherAssignments = async (req, res) => {
       where: {
         schoolId,
       },
-      
+
       select: {
         id: true,
-       
-        teacher : { 
-          select: { 
-            id: true, 
+
+        teacher: {
+          select: {
+            id: true,
             fullName: true,
             email: true,
             phone: true,
-             assignments: {
-          select: {
-            id: true,
-            class: {
+            assignments: {
               select: {
                 id: true,
-                name: true,
-              },
-            },
-            section: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            subject: {
-              select: {
-                id: true,
-                name: true,
-                code: true,
+                class: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+                section: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+                subject: {
+                  select: {
+                    id: true,
+                    name: true,
+                    code: true,
+                  },
+                },
               },
             },
           },
         },
-       } 
-        },       
       },
     });
 
@@ -744,8 +753,6 @@ exports.getSchoolTeacherAssignments = async (req, res) => {
   }
 };
 
- 
-
 exports.assignTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
@@ -754,7 +761,8 @@ exports.assignTeacher = async (req, res) => {
     // 1. Basic validation
     if (!teacherId || !schoolId || !classId || !sectionId || !subjectId) {
       return res.status(400).json({
-        message: "teacherId, schoolId, classId, sectionId, subjectId are required",
+        message:
+          "teacherId, schoolId, classId, sectionId, subjectId are required",
       });
     }
 
@@ -824,7 +832,6 @@ exports.assignTeacher = async (req, res) => {
   }
 };
 
-
 exports.updateTeacherAssignment = async (req, res) => {
   try {
     const { assignmentId } = req.params;
@@ -833,7 +840,8 @@ exports.updateTeacherAssignment = async (req, res) => {
     // 1️⃣ Basic validation
     if (!assignmentId || !schoolId || !classId || !sectionId || !subjectId) {
       return res.status(400).json({
-        message: "assignmentId, schoolId, classId, sectionId, subjectId are required",
+        message:
+          "assignmentId, schoolId, classId, sectionId, subjectId are required",
       });
     }
 
@@ -852,7 +860,9 @@ exports.updateTeacherAssignment = async (req, res) => {
     });
 
     if (!teacher || teacher.schoolId !== schoolId) {
-      return res.status(400).json({ message: "Teacher does not belong to this school" });
+      return res
+        .status(400)
+        .json({ message: "Teacher does not belong to this school" });
     }
 
     // 4️⃣ Prevent duplicate assignment (same teacher + class + section + subject)
@@ -906,7 +916,6 @@ exports.updateTeacherAssignment = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 exports.deleteTeacherAssignment = async (req, res) => {
   try {

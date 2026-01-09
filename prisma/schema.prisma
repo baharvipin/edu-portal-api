@@ -70,13 +70,18 @@ model Subject {
   code     String? // optional field, can be required if you want
   name     String
   schoolId String
-  classId  String?
-  sectionId String?
-  isActive  Boolean?
+  classId  String
+  sectionId String
+  isActive  Boolean
 
   teacherSubjects TeacherSubject[] // ✅ REQUIRED
   assignments     TeachingAssignment[] // ✅ opposite relation
   students  StudentSubject[] // 👈 relation
+
+  // ✅ ADD THESE
+  class     Class    @relation(fields: [classId], references: [id])
+  section   Section  @relation(fields: [sectionId], references: [id])
+ 
 }
 
 enum UserStatus {
@@ -181,7 +186,7 @@ model Class {
   sections    Section[]
   students    Student[]
   assignments TeachingAssignment[] // ✅ opposite relation
-
+subjects  Subject[]   // ✅ back relation
   @@unique([schoolId, name])
 }
 
@@ -201,7 +206,7 @@ model Section {
   class       Class                @relation(fields: [classId], references: [id])
   students    Student[]
   assignments TeachingAssignment[] // ✅ opposite relation
-
+subjects  Subject[]   // ✅ back relation
   @@unique([classId, name])
 }
 

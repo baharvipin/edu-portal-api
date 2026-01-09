@@ -11,15 +11,24 @@ exports.getSubjectsBySchool = async (req, res) => {
     }
 
     const subjects = await prisma.subject.findMany({
-      where: { schoolId, isActive: true  },
-      select: {
-        id: true,
-        name: true,
-        schoolId: true,
-        code: true,
-        sectionId: true,
-        classId: true,
+      where: {
+        schoolId,
         isActive: true,
+      },
+      include: {
+        class: {
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+          },
+        },
+        section: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: {
         name: "asc",
@@ -127,14 +136,13 @@ exports.deleteSubject = async (req, res) => {
       return res.status(404).json({ error: "Subject not found" });
     }
 
-   // Soft delete subject
-await prisma.subject.update({
-  where: { id },
-  data: {
-    isActive: false,
-  },
-});
-
+    // Soft delete subject
+    await prisma.subject.update({
+      where: { id },
+      data: {
+        isActive: false,
+      },
+    });
 
     return res.status(200).json({
       message: "Subject deleted successfully",
