@@ -73,6 +73,7 @@ model Subject {
 
   teacherSubjects TeacherSubject[] // ✅ REQUIRED
   assignments     TeachingAssignment[] // ✅ opposite relation
+  students  StudentSubject[] // 👈 relation
 }
 
 enum UserStatus {
@@ -157,6 +158,7 @@ model Student {
   school             School   @relation(fields: [schoolId], references: [id])
   class              Class    @relation(fields: [classId], references: [id])
   section            Section  @relation(fields: [sectionId], references: [id])
+  subjects  StudentSubject[] // 👈 relation
 }
 
 model Class {
@@ -235,4 +237,21 @@ model TeachingAssignment {
   isActive  Boolean  @default(true)
 
   @@unique([teacherId, subjectId, classId, sectionId])
+}
+
+
+model StudentSubject {
+  id        String @id @default(uuid())
+
+  studentId String
+  subjectId String
+  schoolId  String
+
+  student   Student @relation(fields: [studentId], references: [id])
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  createdAt DateTime @default(now())
+  isActive  Boolean  @default(true)
+
+  @@unique([studentId, subjectId])
 }

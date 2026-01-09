@@ -6,6 +6,7 @@ const {
   softDeleteStudent,
   activateStudent,
   bulkAddStudents,
+  assignSubjectsToStudent
 } = require("../controllers/student.controller");
 
 // POST → Add student
@@ -16,5 +17,8 @@ router.put("/:id/delete", softDeleteStudent);
 router.put("/:id/activate", activateStudent);
 
 router.post("/bulk-upload", bulkAddStudents);
+
+router.post("/:studentId/subjects", assignSubjectsToStudent);
+
 
 module.exports = router;

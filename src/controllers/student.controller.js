@@ -257,3 +257,34 @@ exports.bulkAddStudents = async (req, res) => {
     return res.status(500).json({ message: "Bulk upload failed" });
   }
 };
+
+
+exports.assignSubjectsToStudent = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { schoolId, subjectIds } = req.body;
+
+    if (!studentId || !schoolId || !Array.isArray(subjectIds)) {
+      return res.status(400).json({ message: "Invalid payload" });
+    }
+
+    const data = subjectIds.map(subjectId => ({
+      studentId,
+      subjectId,
+      schoolId,
+    }));
+
+    await prisma.studentSubject.createMany({
+      data,
+      skipDuplicates: true, // 🔥 prevents duplicates
+    });
+
+    return res.status(201).json({
+      message: "Subjects assigned successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
