@@ -5,7 +5,7 @@ const {
   createSubject,
   updateSubject,
   deleteSubject,
-  assignSubjectsToStudent
+  assignSubjectsToStudent,
 } = require("../controllers/subject.controller");
 
 // GET subjects by schoolId

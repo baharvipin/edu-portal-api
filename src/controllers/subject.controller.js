@@ -151,39 +151,88 @@ exports.deleteSubject = async (req, res) => {
     console.error("Error deleting subject:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
-}; 
+};
 
 exports.assignSubjectsToStudent = async (req, res) => {
   try {
     const { studentId, subjectIds } = req.body;
 
-    if ( !studentId || !Array.isArray(subjectIds)) {
+    if (!studentId || !Array.isArray(subjectIds)) {
       return res.status(400).json({
-        message: "studentId and subjectIds are required"
+        message: "studentId and subjectIds are required",
       });
     }
 
-    // 🔁 Prepare bulk insert data
-    const records = subjectIds.map(subjectId => ({
-      studentId,
-      subjectId
-    }));
+    await prisma.$transaction(async (tx) => {
+      // 1️⃣ Fetch existing subject assignments
+      const existing = await tx.studentSubject.findMany({
+        where: { studentId },
+        select: {
+          id: true,
+          subjectId: true,
+          isActive: true,
+        },
+      });
 
-    // 🚀 Bulk insert (safe + fast)
-    await prisma.studentSubject.createMany({
-      data: records,
-      skipDuplicates: true // avoids duplicate assignment
+      const existingSubjectIds = existing.map((e) => e.subjectId);
+
+      // 2️⃣ Identify subjects to CREATE
+      const toCreate = subjectIds.filter(
+        (id) => !existingSubjectIds.includes(id),
+      );
+
+      // 3️⃣ Identify subjects to DEACTIVATE
+      const toDeactivate = existing
+        .filter((e) => !subjectIds.includes(e.subjectId) && e.isActive)
+        .map((e) => e.subjectId);
+
+      // 4️⃣ Identify subjects to REACTIVATE
+      const toReactivate = existing
+        .filter((e) => subjectIds.includes(e.subjectId) && !e.isActive)
+        .map((e) => e.subjectId);
+
+      // 🔹 CREATE new assignments
+      if (toCreate.length > 0) {
+        await tx.studentSubject.createMany({
+          data: toCreate.map((subjectId) => ({
+            studentId,
+            subjectId,
+            isActive: true,
+          })),
+        });
+      }
+
+      // 🔹 DEACTIVATE removed subjects
+      if (toDeactivate.length > 0) {
+        await tx.studentSubject.updateMany({
+          where: {
+            studentId,
+            subjectId: { in: toDeactivate },
+          },
+          data: { isActive: false },
+        });
+      }
+
+      // 🔹 REACTIVATE existing but inactive subjects
+      if (toReactivate.length > 0) {
+        await tx.studentSubject.updateMany({
+          where: {
+            studentId,
+            subjectId: { in: toReactivate },
+          },
+          data: { isActive: true },
+        });
+      }
     });
 
-    return res.status(201).json({
-      message: "Subjects assigned to student successfully"
+    return res.status(200).json({
+      message: "Student subjects updated successfully",
     });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       message: "Failed to assign subjects",
-      error: error.message
+      error: error.message,
     });
   }
 };
