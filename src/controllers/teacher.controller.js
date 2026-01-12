@@ -295,7 +295,6 @@ exports.addTeacher = async (req, res) => {
             data: {
               teacherId: teacher.id,
               subjectId: subject.id,
-              schoolId,
             },
           }),
         ),
@@ -335,7 +334,7 @@ exports.addTeacher = async (req, res) => {
 exports.updateTeacher = async (req, res) => {
   try {
     const { id } = req.params;
-    const { fullName, phone, subjects } = req.body;
+    const { fullName, phone, subjects, email } = req.body;
 
     if (!id) {
       return res.status(400).json({ message: "Teacher id is required" });
@@ -394,7 +393,6 @@ exports.updateTeacher = async (req, res) => {
             data: {
               teacherId: id,
               subjectId,
-              schoolId: existingTeacher.schoolId,
             },
           }),
         ),
@@ -416,6 +414,11 @@ exports.updateTeacher = async (req, res) => {
     }
 
     // 6️⃣ Update phone and fullName in Teacher table
+    await prisma.teacher.update({
+      where: { id },
+      data: { fullName, phone, email },
+    });
+
     const updatedTeacher = await prisma.teacher.findUnique({
       where: { id },
       include: {

@@ -103,7 +103,7 @@ model Teacher {
 model Student {
   id String @id @default(uuid())
 
-  userId    String? @unique
+  userId String?
   schoolId  String
   firstName String
   lastName  String

@@ -87,9 +87,7 @@ exports.login = async (req, res) => {
       if (user.role === "STUDENT") {
         student = await prisma.student.findUnique({
           where: { userId: user.id },
-          select: { mustChangePassword: true },
         });
-
         mustChangePassword = student?.mustChangePassword ?? false;
       }
 

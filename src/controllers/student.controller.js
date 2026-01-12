@@ -1,4 +1,7 @@
 const prisma = require("../config/db");
+const bcrypt = require("bcrypt");
+const sendMail = require("../utils/sendEmail");
+const teacherTempPasswordTemplate = require("../templates/teacherTempPassword");
 
 /**
  * POST /api/students
@@ -41,23 +44,60 @@ exports.addStudent = async (req, res) => {
       return res.status(409).json({ message: "Student already exists" });
     }
 
-    const student = await prisma.student.create({
-      data: {
-        schoolId,
-        classId,
-        sectionId: sectionId || null,
-        firstName,
-        lastName,
+    // 4️⃣ Generate temp password
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    console.log("Temp password for teacher:", tempPassword);
+
+    // 5️⃣ TRANSACTION (Admin + Teacher + TeacherSubject)
+    const result = await prisma.$transaction(async (tx) => {
+      // 1️⃣ Create Admin
+      const adminUser = await tx.admin.create({
+        data: {
+          name: `${firstName} ${lastName}`,
+          email,
+          password: hashedPassword,
+          role: "STUDENT",
+          status: "INVITED",
+          schoolId,
+        },
+      });
+
+      // 2️⃣ Create Student USING tx
+      const student = await tx.student.create({
+        data: {
+          userId: adminUser.id, // ✅ FK exists now
+          schoolId,
+          classId,
+          sectionId: sectionId || null,
+          firstName,
+          lastName,
+          email,
+          phone,
+          parentName,
+          parentPhone,
+        },
+      });
+
+      return student; // ✅ IMPORTANT
+    });
+
+    // 6️⃣ Send invitation email
+    await sendMail({
+      to: email,
+      subject: "You're invited as a Teacher on EduPortal",
+      html: teacherTempPasswordTemplate({
+        fullName: `${firstName} ${lastName}`,
         email,
-        phone,
-        parentName,
-        parentPhone,
-      },
+        tempPassword,
+        loginUrl: process.env.FRONTEND_LOGIN_URL,
+      }),
     });
 
     return res.status(201).json({
       message: "Student registered successfully",
-      student,
+      result,
     });
   } catch (error) {
     console.error("Add Student Error:", error);
