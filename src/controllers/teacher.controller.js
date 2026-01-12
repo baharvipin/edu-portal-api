@@ -621,6 +621,18 @@ exports.getTeacherDashboard = async (req, res) => {
         fullName: true,
         email: true,
         mustChangePassword: true,
+        school: {
+          select: {
+            id: true,
+            name: true,
+            board: true,
+            city: true,
+            state: true,
+            email: true,
+            system: true,
+            isActive: true,
+          },
+        },
       },
     });
 
