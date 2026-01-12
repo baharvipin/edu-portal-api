@@ -326,3 +326,112 @@ exports.assignSubjectsToStudent = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.getStudentById = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: {
+        // 🧑 User account
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            status: true,
+          },
+        },
+
+        // 🏫 School info
+        school: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+            state: true,
+            status: true,
+          },
+        },
+
+        // 🏷 Class
+        class: {
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+          },
+        },
+
+        // 📚 Section
+        section: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+
+        // 📘 Subjects assigned to student
+        studentSubjects: {
+          where: { isActive: true },
+          include: {
+            subject: {
+              include: {
+                class: true,
+                section: true,
+
+                // 👨‍🏫 Teachers for subject
+                teacherSubjects: {
+                  where: { isActive: true },
+                  include: {
+                    teacher: {
+                      select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                        phone: true,
+                      },
+                    },
+                  },
+                },
+
+                // 📋 Teaching assignments
+                assignments: {
+                  where: { isActive: true },
+                  include: {
+                    teacher: {
+                      select: {
+                        id: true,
+                        fullName: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: student,
+    });
+  } catch (error) {
+    console.error("Error fetching student:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
