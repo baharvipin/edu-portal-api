@@ -151,4 +151,39 @@ exports.deleteSubject = async (req, res) => {
     console.error("Error deleting subject:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
+}; 
+
+exports.assignSubjectsToStudent = async (req, res) => {
+  try {
+    const { studentId, subjectIds } = req.body;
+
+    if ( !studentId || !Array.isArray(subjectIds)) {
+      return res.status(400).json({
+        message: "studentId and subjectIds are required"
+      });
+    }
+
+    // 🔁 Prepare bulk insert data
+    const records = subjectIds.map(subjectId => ({
+      studentId,
+      subjectId
+    }));
+
+    // 🚀 Bulk insert (safe + fast)
+    await prisma.studentSubject.createMany({
+      data: records,
+      skipDuplicates: true // avoids duplicate assignment
+    });
+
+    return res.status(201).json({
+      message: "Subjects assigned to student successfully"
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Failed to assign subjects",
+      error: error.message
+    });
+  }
 };

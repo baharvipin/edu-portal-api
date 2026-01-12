@@ -5,6 +5,7 @@ const {
   createSubject,
   updateSubject,
   deleteSubject,
+  assignSubjectsToStudent
 } = require("../controllers/subject.controller");
 
 // GET subjects by schoolId
@@ -15,5 +16,6 @@ router.post("/addSubject", createSubject);
 // routes/subject.routes.js
 router.put("/:id", updateSubject);
 router.patch("/:id", deleteSubject);
+router.post("/assign-subjects", assignSubjectsToStudent);
 
 module.exports = router;

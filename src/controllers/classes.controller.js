@@ -79,14 +79,33 @@ exports.getClassesBySchool = async (req, res) => {
     }
 
     // Fetch classes for the school including students
-    const classes = await prisma.class.findMany({
-      where: { schoolId },
-      orderBy: { order: "asc" },
+    // const classes = await prisma.class.findMany({
+    //   where: { schoolId },
+    //   orderBy: { order: "asc" },
+    //   include: {
+    //     students: true, // Include students assigned to this class
+    //     sections: true, // Include section assigned to this class
+    //   },
+    // });
+
+const classes = await prisma.class.findMany({
+  where: { schoolId },
+  orderBy: { order: "asc" },
+  include: {
+    sections: true,
+
+    students: {
       include: {
-        students: true, // Include students assigned to this class
-        sections: true, // Include section assigned to this class
-      },
-    });
+        studentSubjects: {        // ✅ correct relation name
+          include: {
+            subject: true         // ✅ actual subject data
+          }
+        }
+      }
+    }
+  }
+});
+
 
     return res.json({ classes });
   } catch (error) {
