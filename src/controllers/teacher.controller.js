@@ -253,13 +253,11 @@ exports.addTeacher = async (req, res) => {
     const invalidSubjects = subjects.filter((s) => !dbSubjectNames.includes(s));
 
     if (invalidSubjects.length > 0) {
-      return res
-        .status(400)
-        .json({
-          status: false,
-          message: "Invalid subjects found",
-          invalidSubjects,
-        });
+      return res.status(400).json({
+        status: false,
+        message: "Invalid subjects found",
+        invalidSubjects,
+      });
     }
 
     // 4️⃣ Generate temp password
@@ -380,13 +378,11 @@ exports.updateTeacher = async (req, res) => {
       );
 
       if (invalidSubjects.length > 0) {
-        return res
-          .status(400)
-          .json({
-            status: false,
-            message: "One or more subjects are invalid",
-            invalidSubjects,
-          });
+        return res.status(400).json({
+          status: false,
+          message: "One or more subjects are invalid",
+          invalidSubjects,
+        });
       }
 
       // 3️⃣ Compute diff
@@ -712,7 +708,7 @@ exports.getTeacherDashboard = async (req, res) => {
 
     res.json({
       status: true,
-       message: "Fetched data for school teacher overview",
+      message: "Fetched data for school teacher overview",
       teacher,
       summary: {
         subjectsCount,

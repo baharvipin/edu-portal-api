@@ -33,12 +33,10 @@ exports.addClass = async (req, res) => {
 
     // handle duplicate class per school
     if (error.code === "P2002") {
-      return res
-        .status(409)
-        .json({
-          status: false,
-          message: "Class already exists for this school",
-        });
+      return res.status(409).json({
+        status: false,
+        message: "Class already exists for this school",
+      });
     }
 
     return res

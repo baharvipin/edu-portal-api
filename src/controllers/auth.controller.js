@@ -161,12 +161,10 @@ exports.changePassword = async (req, res) => {
     const { newPassword, userId: adminId, role } = req.body;
 
     if (!newPassword || newPassword.length < 8) {
-      return res
-        .status(400)
-        .json({
-          status: false,
-          message: "Password must be at least 8 characters long",
-        });
+      return res.status(400).json({
+        status: false,
+        message: "Password must be at least 8 characters long",
+      });
     }
 
     // 🔒 Only Teacher & Student allowed

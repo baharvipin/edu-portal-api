@@ -92,12 +92,10 @@ exports.updateSubject = async (req, res) => {
     }
 
     if (!name && !code) {
-      return res
-        .status(400)
-        .json({
-          status: false,
-          error: "At least one field (name or code) is required to update",
-        });
+      return res.status(400).json({
+        status: false,
+        error: "At least one field (name or code) is required to update",
+      });
     }
 
     // Check if subject exists
@@ -178,12 +176,10 @@ exports.assignSubjectsToStudent = async (req, res) => {
     const { studentId, subjectIds } = req.body;
 
     if (!studentId || !Array.isArray(subjectIds)) {
-      return res
-        .status(400)
-        .json({
-          status: false,
-          message: "studentId and subjectIds are required",
-        });
+      return res.status(400).json({
+        status: false,
+        message: "studentId and subjectIds are required",
+      });
     }
 
     await prisma.$transaction(async (tx) => {

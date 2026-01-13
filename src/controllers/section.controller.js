@@ -7,21 +7,17 @@ exports.addSection = async (req, res) => {
 
     // 1️⃣ Validation
     if (!schoolId || !classId || !name) {
-      return res
-        .status(400)
-        .json({
-          status: false,
-          message: "schoolId, classId and section name are required",
-        });
+      return res.status(400).json({
+        status: false,
+        message: "schoolId, classId and section name are required",
+      });
     }
 
     if (!/^[A-Z]$/.test(name)) {
-      return res
-        .status(400)
-        .json({
-          status: false,
-          message: "Section name must be a single capital letter (A, B, C)",
-        });
+      return res.status(400).json({
+        status: false,
+        message: "Section name must be a single capital letter (A, B, C)",
+      });
     }
 
     // 2️⃣ Check class exists & belongs to school

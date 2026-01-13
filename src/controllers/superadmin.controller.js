@@ -109,12 +109,10 @@ exports.suspendSchool = async (req, res) => {
 
     // 2️⃣ Only ACTIVE schools can be suspended
     if (school.status !== "ACTIVE") {
-      return res
-        .status(400)
-        .json({
-          status: false,
-          message: `Only ACTIVE schools can be suspended. Current status: ${school.status}`,
-        });
+      return res.status(400).json({
+        status: false,
+        message: `Only ACTIVE schools can be suspended. Current status: ${school.status}`,
+      });
     }
 
     // 3️⃣ Update status to SUSPENDED
@@ -153,12 +151,10 @@ exports.deactivateSchool = async (req, res) => {
 
     // 2️⃣ Only ACTIVE schools can be deactivated
     if (school.status !== "ACTIVE") {
-      return res
-        .status(400)
-        .json({
-          status: false,
-          message: `Only ACTIVE schools can be deactivated. Current status: ${school.status}`,
-        });
+      return res.status(400).json({
+        status: false,
+        message: `Only ACTIVE schools can be deactivated. Current status: ${school.status}`,
+      });
     }
 
     // 3️⃣ Update status to INACTIVE
@@ -199,12 +195,10 @@ exports.rejectSchool = async (req, res) => {
     const allowedStatuses = ["PROFILE_SUBMITTED", "PROFILE_INCOMPLETE"];
 
     if (!allowedStatuses.includes(school.status)) {
-      return res
-        .status(400)
-        .json({
-          status: false,
-          message: `School cannot be rejected in '${school.status}' status`,
-        });
+      return res.status(400).json({
+        status: false,
+        message: `School cannot be rejected in '${school.status}' status`,
+      });
     }
 
     // 3️⃣ Update school status
