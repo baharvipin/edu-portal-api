@@ -33,6 +33,7 @@ exports.registerSchool = async (req, res) => {
     });
 
     res.status(201).json({
+      status: true,
       message: "School registered successfully.",
       school,
     });
@@ -44,10 +45,10 @@ exports.registerSchool = async (req, res) => {
       error.message === "Terms must be accepted." ||
       error.message === "School email already exists."
     ) {
-      return res.status(400).json({ error: error.message });
+      return res.status(400).json({ status: false, error: error.message });
     }
 
-    res.status(500).json({ error: "Internal server error." });
+    res.status(500).json({ status: false, error: "Internal server error." });
   }
 };
 
@@ -59,15 +60,20 @@ exports.login = async (req, res) => {
       where: { email },
     });
 
-    console.log("Login attempt for user:", email, user);
+    console.log("Login attempt for user:", email, user, password);
 
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ status: false, message: "Invalid credentials" });
     }
 
     const valid = await bcrypt.compare(password, user.password);
+    console.log("Validity", valid);
     if (!valid) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ status: false, message: "Invalid credentials" });
     }
     let teacher = null;
     let student = null;
@@ -93,6 +99,7 @@ exports.login = async (req, res) => {
 
       if (mustChangePassword) {
         return res.status(200).json({
+          status: true,
           mustChangePassword: true,
           userId: user.id,
           role: user.role,
@@ -109,7 +116,9 @@ exports.login = async (req, res) => {
       });
 
       if (!school || !school.isActive) {
-        return res.status(403).json({ message: "School is not active" });
+        return res
+          .status(403)
+          .json({ status: false, message: "School is not active" });
       }
     }
 
@@ -127,6 +136,8 @@ exports.login = async (req, res) => {
     );
 
     res.json({
+      status: true,
+      message: "Login is done successfully",
       token,
       user: {
         id: user.id,
@@ -140,7 +151,7 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ error: "Internal server error." });
+    res.status(500).json({ status: false, error: "Internal server error." });
   }
 };
 
@@ -150,9 +161,12 @@ exports.changePassword = async (req, res) => {
     const { newPassword, userId: adminId, role } = req.body;
 
     if (!newPassword || newPassword.length < 8) {
-      return res.status(400).json({
-        message: "Password must be at least 8 characters long",
-      });
+      return res
+        .status(400)
+        .json({
+          status: false,
+          message: "Password must be at least 8 characters long",
+        });
     }
 
     // 🔒 Only Teacher & Student allowed
@@ -191,13 +205,14 @@ exports.changePassword = async (req, res) => {
     });
 
     res.json({
+      status: true,
       message: "Password updated successfully",
       forceLogout: true,
     });
   } catch (error) {
     console.error("Change password error:", error);
-    res.status(500).json({
-      message: "Failed to update password",
-    });
+    res
+      .status(500)
+      .json({ status: false, message: "Failed to update password" });
   }
 };

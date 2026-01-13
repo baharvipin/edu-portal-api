@@ -32,7 +32,9 @@ exports.addStudent = async (req, res) => {
       !parentName ||
       !parentPhone
     ) {
-      return res.status(400).json({ message: "Missing required fields" });
+      return res
+        .status(400)
+        .json({ status: false, message: "Missing required fields" });
     }
 
     // Check duplicate email
@@ -41,7 +43,9 @@ exports.addStudent = async (req, res) => {
     });
 
     if (existingStudent) {
-      return res.status(409).json({ message: "Student already exists" });
+      return res
+        .status(409)
+        .json({ status: false, message: "Student already exists" });
     }
 
     // 4️⃣ Generate temp password
@@ -96,12 +100,15 @@ exports.addStudent = async (req, res) => {
     });
 
     return res.status(201).json({
+      status: true,
       message: "Student registered successfully",
       result,
     });
   } catch (error) {
     console.error("Add Student Error:", error);
-    return res.status(500).json({ message: "Failed to add student" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Failed to add student" });
   }
 };
 
@@ -135,12 +142,15 @@ exports.updateStudent = async (req, res) => {
     });
 
     res.json({
+      status: true,
       message: "Student updated successfully",
       student,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to update student" });
+    res
+      .status(500)
+      .json({ status: false, message: "Failed to update student" });
   }
 };
 
@@ -157,12 +167,15 @@ exports.softDeleteStudent = async (req, res) => {
     });
 
     return res.json({
+      status: true,
       message: "Student removed successfully",
       student,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Failed to remove student" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Failed to remove student" });
   }
 };
 
@@ -179,12 +192,15 @@ exports.activateStudent = async (req, res) => {
     });
 
     return res.json({
+      status: true,
       message: "Student activated successfully",
       student,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Failed to activate student" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Failed to activate student" });
   }
 };
 
@@ -193,7 +209,9 @@ exports.bulkAddStudents = async (req, res) => {
     const { schoolId, students } = req.body;
 
     if (!schoolId || !Array.isArray(students) || students.length === 0) {
-      return res.status(400).json({ message: "Invalid payload" });
+      return res
+        .status(400)
+        .json({ status: false, message: "Invalid payload" });
     }
 
     /* -----------------------------
@@ -288,13 +306,16 @@ exports.bulkAddStudents = async (req, res) => {
     });
 
     return res.status(201).json({
+      status: true,
       message: "Bulk student upload completed",
       insertedCount: created.count,
       skipped,
     });
   } catch (error) {
     console.error("Bulk Add Students Error:", error);
-    return res.status(500).json({ message: "Bulk upload failed" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Bulk upload failed" });
   }
 };
 
@@ -304,7 +325,9 @@ exports.assignSubjectsToStudent = async (req, res) => {
     const { schoolId, subjectIds } = req.body;
 
     if (!studentId || !schoolId || !Array.isArray(subjectIds)) {
-      return res.status(400).json({ message: "Invalid payload" });
+      return res
+        .status(400)
+        .json({ status: false, message: "Invalid payload" });
     }
 
     const data = subjectIds.map((subjectId) => ({
@@ -318,12 +341,12 @@ exports.assignSubjectsToStudent = async (req, res) => {
       skipDuplicates: true, // 🔥 prevents duplicates
     });
 
-    return res.status(201).json({
-      message: "Subjects assigned successfully",
-    });
+    return res
+      .status(201)
+      .json({ status: true, message: "Subjects assigned successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
 
@@ -417,21 +440,16 @@ exports.getStudentById = async (req, res) => {
     });
 
     if (!student) {
-      return res.status(404).json({
-        success: false,
-        message: "Student not found",
-      });
+      return res
+        .status(404)
+        .json({ status: false, message: "Student not found" });
     }
 
-    return res.status(200).json({
-      success: true,
-      data: student,
-    });
+    return res.status(200).json({ status: true, data: student });
   } catch (error) {
     console.error("Error fetching student:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };

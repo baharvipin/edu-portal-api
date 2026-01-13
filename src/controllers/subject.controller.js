@@ -5,9 +5,9 @@ exports.getSubjectsBySchool = async (req, res) => {
     const { schoolId } = req.params;
 
     if (!schoolId) {
-      return res.status(400).json({
-        message: "schoolId is required",
-      });
+      return res
+        .status(400)
+        .json({ status: false, message: "schoolId is required" });
     }
 
     const subjects = await prisma.subject.findMany({
@@ -36,14 +36,15 @@ exports.getSubjectsBySchool = async (req, res) => {
     });
 
     return res.status(200).json({
+      status: true,
       message: "Subjects fetched successfully",
       subjects,
     });
   } catch (error) {
     console.error("Get Subjects Error:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
 
@@ -56,7 +57,9 @@ exports.createSubject = async (req, res) => {
 
     // Validation
     if (!name || !schoolId) {
-      return res.status(400).json({ error: "Name and schoolId are required" });
+      return res
+        .status(400)
+        .json({ status: false, error: "Name and schoolId are required" });
     }
 
     // Create subject
@@ -64,10 +67,12 @@ exports.createSubject = async (req, res) => {
       data: { code, name, schoolId, sectionId, classId, isActive: true },
     });
 
-    return res.status(201).json(newSubject);
+    return res.status(201).json({ status: true, subject: newSubject });
   } catch (error) {
     console.error("Error creating subject:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
   }
 };
 
@@ -81,13 +86,18 @@ exports.updateSubject = async (req, res) => {
 
     // Validation
     if (!id) {
-      return res.status(400).json({ error: "Subject id is required" });
+      return res
+        .status(400)
+        .json({ status: false, error: "Subject id is required" });
     }
 
     if (!name && !code) {
-      return res.status(400).json({
-        error: "At least one field (name or code) is required to update",
-      });
+      return res
+        .status(400)
+        .json({
+          status: false,
+          error: "At least one field (name or code) is required to update",
+        });
     }
 
     // Check if subject exists
@@ -96,7 +106,9 @@ exports.updateSubject = async (req, res) => {
     });
 
     if (!existingSubject) {
-      return res.status(404).json({ error: "Subject not found" });
+      return res
+        .status(404)
+        .json({ status: false, error: "Subject not found" });
     }
 
     // Update subject
@@ -108,10 +120,12 @@ exports.updateSubject = async (req, res) => {
       },
     });
 
-    return res.status(200).json(updatedSubject);
+    return res.status(200).json({ status: true, subject: updatedSubject });
   } catch (error) {
     console.error("Error updating subject:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
   }
 };
 
@@ -124,7 +138,9 @@ exports.deleteSubject = async (req, res) => {
 
     // Validation
     if (!id) {
-      return res.status(400).json({ error: "Subject id is required" });
+      return res
+        .status(400)
+        .json({ status: false, error: "Subject id is required" });
     }
 
     // Check if subject exists
@@ -133,7 +149,9 @@ exports.deleteSubject = async (req, res) => {
     });
 
     if (!existingSubject) {
-      return res.status(404).json({ error: "Subject not found" });
+      return res
+        .status(404)
+        .json({ status: false, error: "Subject not found" });
     }
 
     // Soft delete subject
@@ -144,12 +162,14 @@ exports.deleteSubject = async (req, res) => {
       },
     });
 
-    return res.status(200).json({
-      message: "Subject deleted successfully",
-    });
+    return res
+      .status(200)
+      .json({ status: true, message: "Subject deleted successfully" });
   } catch (error) {
     console.error("Error deleting subject:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
   }
 };
 
@@ -158,9 +178,12 @@ exports.assignSubjectsToStudent = async (req, res) => {
     const { studentId, subjectIds } = req.body;
 
     if (!studentId || !Array.isArray(subjectIds)) {
-      return res.status(400).json({
-        message: "studentId and subjectIds are required",
-      });
+      return res
+        .status(400)
+        .json({
+          status: false,
+          message: "studentId and subjectIds are required",
+        });
     }
 
     await prisma.$transaction(async (tx) => {
@@ -225,12 +248,13 @@ exports.assignSubjectsToStudent = async (req, res) => {
       }
     });
 
-    return res.status(200).json({
-      message: "Student subjects updated successfully",
-    });
+    return res
+      .status(200)
+      .json({ status: true, message: "Student subjects updated successfully" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
+      status: false,
       message: "Failed to assign subjects",
       error: error.message,
     });

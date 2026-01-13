@@ -11,7 +11,7 @@ exports.completeSchoolProfile = async (req, res) => {
     });
 
     if (!admin || !admin.schoolId) {
-      return res.status(403).json({ message: "Unauthorized" });
+      return res.status(403).json({ status: false, message: "Unauthorized" });
     }
 
     // 2️⃣ Extract body
@@ -51,9 +51,12 @@ exports.completeSchoolProfile = async (req, res) => {
       !academicYear ||
       !schoolTimings
     ) {
-      return res.status(400).json({
-        message: "Missing required school profile fields",
-      });
+      return res
+        .status(400)
+        .json({
+          status: false,
+          message: "Missing required school profile fields",
+        });
     }
 
     // 4️⃣ Upsert School Profile
@@ -120,11 +123,12 @@ exports.completeSchoolProfile = async (req, res) => {
     });
 
     res.status(200).json({
+      status: true,
       message: "School profile completed & activated successfully",
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ status: false, message: "Server error" });
   }
 };
 
@@ -153,15 +157,12 @@ exports.getSchoolOverview = async (req, res) => {
       }),
     ]);
 
-    res.json({
-      teachers,
-      students,
-      subjects,
-      classes,
-    });
+    res.json({ status: true, message: "Fetched data for school overview",  teachers, students, subjects, classes });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to fetch school overview" });
+    res
+      .status(500)
+      .json({ status: false, message: "Failed to fetch school overview" });
   }
 };
 
@@ -171,19 +172,19 @@ exports.getSchoolOverview = async (req, res) => {
 exports.getTeachersBySchool = async (req, res) => {
   const { schoolId } = req.params;
   const teachers = await prisma.teacher.findMany({ where: { schoolId } });
-  res.json(teachers);
+  res.json({ status: true, teachers,  message: "Fetched data for teachers" });
 };
 
 exports.getStudentsBySchool = async (req, res) => {
   const { schoolId } = req.params;
   const students = await prisma.student.findMany({ where: { schoolId } });
-  res.json(students);
+  res.json({ status: true, students ,  message: "Fetched data for school student"});
 };
 
 exports.getSubjectsBySchool = async (req, res) => {
   const { schoolId } = req.params;
   const subjects = await prisma.subject.findMany({ where: { schoolId } });
-  res.json(subjects);
+  res.json({ status: true, subjects,  message: "Fetched data for school subjects" });
 };
 
 exports.getClassesBySchool = async (req, res) => {
@@ -194,5 +195,5 @@ exports.getClassesBySchool = async (req, res) => {
       sections: true,
     },
   });
-  res.json(classes);
+  res.json({ status: true, classes,  message: "Fetched data for school classes" });
 };

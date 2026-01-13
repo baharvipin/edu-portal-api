@@ -7,7 +7,7 @@ const {
   activateStudent,
   bulkAddStudents,
   assignSubjectsToStudent,
-  getStudentById
+  getStudentById,
 } = require("../controllers/student.controller");
 
 // POST → Add student

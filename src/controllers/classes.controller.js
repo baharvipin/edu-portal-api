@@ -11,7 +11,7 @@ exports.addClass = async (req, res) => {
     if (!schoolId || !name) {
       return res
         .status(400)
-        .json({ message: "schoolId and name are required" });
+        .json({ status: false, message: "schoolId and name are required" });
     }
 
     const newClass = await prisma.class.create({
@@ -24,6 +24,7 @@ exports.addClass = async (req, res) => {
     });
 
     return res.status(201).json({
+      status: true,
       message: "Class added successfully",
       class: newClass,
     });
@@ -32,12 +33,17 @@ exports.addClass = async (req, res) => {
 
     // handle duplicate class per school
     if (error.code === "P2002") {
-      return res.status(409).json({
-        message: "Class already exists for this school",
-      });
+      return res
+        .status(409)
+        .json({
+          status: false,
+          message: "Class already exists for this school",
+        });
     }
 
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
 
@@ -47,7 +53,9 @@ exports.addClassesBulk = async (req, res) => {
     const { schoolId, classes } = req.body;
 
     if (!schoolId || !classes?.length) {
-      return res.status(400).json({ message: "Invalid payload" });
+      return res
+        .status(400)
+        .json({ status: false, message: "Invalid payload" });
     }
 
     const data = classes.map((c, index) => ({
@@ -62,10 +70,12 @@ exports.addClassesBulk = async (req, res) => {
       skipDuplicates: true, // respects @@unique([schoolId, name])
     });
 
-    return res.json({ message: "Classes added successfully" });
+    return res.json({ status: true, message: "Classes added successfully" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to add classes" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Failed to add classes" });
   }
 };
 
@@ -75,7 +85,9 @@ exports.getClassesBySchool = async (req, res) => {
     const { schoolId } = req.params;
 
     if (!schoolId) {
-      return res.status(400).json({ message: "School ID is required" });
+      return res
+        .status(400)
+        .json({ status: false, message: "School ID is required" });
     }
 
     // Fetch classes for the school including students
@@ -110,10 +122,12 @@ exports.getClassesBySchool = async (req, res) => {
       },
     });
 
-    return res.json({ classes });
+    return res.json({ status: true, classes });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to fetch classes" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Failed to fetch classes" });
   }
 };
 

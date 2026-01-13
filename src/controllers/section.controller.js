@@ -7,15 +7,21 @@ exports.addSection = async (req, res) => {
 
     // 1️⃣ Validation
     if (!schoolId || !classId || !name) {
-      return res.status(400).json({
-        message: "schoolId, classId and section name are required",
-      });
+      return res
+        .status(400)
+        .json({
+          status: false,
+          message: "schoolId, classId and section name are required",
+        });
     }
 
     if (!/^[A-Z]$/.test(name)) {
-      return res.status(400).json({
-        message: "Section name must be a single capital letter (A, B, C)",
-      });
+      return res
+        .status(400)
+        .json({
+          status: false,
+          message: "Section name must be a single capital letter (A, B, C)",
+        });
     }
 
     // 2️⃣ Check class exists & belongs to school
@@ -27,9 +33,9 @@ exports.addSection = async (req, res) => {
     });
 
     if (!cls) {
-      return res.status(404).json({
-        message: "Class not found for this school",
-      });
+      return res
+        .status(404)
+        .json({ status: false, message: "Class not found for this school" });
     }
 
     // 3️⃣ Create section
@@ -42,6 +48,7 @@ exports.addSection = async (req, res) => {
     });
 
     return res.status(201).json({
+      status: true,
       message: "Section added successfully",
       section,
     });
@@ -51,12 +58,13 @@ exports.addSection = async (req, res) => {
     // 4️⃣ Unique constraint (classId + name)
     if (error.code === "P2002") {
       return res.status(409).json({
+        status: false,
         message: "Section already exists for this class",
       });
     }
 
-    return res.status(500).json({
-      message: "Failed to add section",
-    });
+    return res
+      .status(500)
+      .json({ status: false, message: "Failed to add section" });
   }
 };

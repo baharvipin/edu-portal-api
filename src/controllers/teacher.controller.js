@@ -225,7 +225,9 @@ exports.addTeacher = async (req, res) => {
 
     // 1️⃣ Validate
     if (!fullName || !email || !schoolId || !subjects?.length) {
-      return res.status(400).json({ message: "Missing required fields" });
+      return res
+        .status(400)
+        .json({ status: false, message: "Missing required fields" });
     }
 
     // 2️⃣ Check existing admin
@@ -234,7 +236,9 @@ exports.addTeacher = async (req, res) => {
     });
 
     if (existingUser) {
-      return res.status(409).json({ message: "User already exists" });
+      return res
+        .status(409)
+        .json({ status: false, message: "User already exists" });
     }
 
     // 3️⃣ Validate subjects
@@ -249,10 +253,13 @@ exports.addTeacher = async (req, res) => {
     const invalidSubjects = subjects.filter((s) => !dbSubjectNames.includes(s));
 
     if (invalidSubjects.length > 0) {
-      return res.status(400).json({
-        message: "Invalid subjects found",
-        invalidSubjects,
-      });
+      return res
+        .status(400)
+        .json({
+          status: false,
+          message: "Invalid subjects found",
+          invalidSubjects,
+        });
     }
 
     // 4️⃣ Generate temp password
@@ -322,12 +329,15 @@ exports.addTeacher = async (req, res) => {
     });
 
     return res.status(201).json({
+      status: true,
       message: "Teacher added successfully and invitation email sent",
       teacher: result.teacher,
     });
   } catch (error) {
     console.error("Add teacher error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
 
@@ -337,7 +347,9 @@ exports.updateTeacher = async (req, res) => {
     const { fullName, phone, subjects, email } = req.body;
 
     if (!id) {
-      return res.status(400).json({ message: "Teacher id is required" });
+      return res
+        .status(400)
+        .json({ status: false, message: "Teacher id is required" });
     }
 
     // 1️⃣ Check teacher exists
@@ -347,7 +359,9 @@ exports.updateTeacher = async (req, res) => {
     });
 
     if (!existingTeacher) {
-      return res.status(404).json({ message: "Teacher not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "Teacher not found" });
     }
 
     // 2️⃣ Validate subjects (if provided)
@@ -366,10 +380,13 @@ exports.updateTeacher = async (req, res) => {
       );
 
       if (invalidSubjects.length > 0) {
-        return res.status(400).json({
-          message: "One or more subjects are invalid",
-          invalidSubjects,
-        });
+        return res
+          .status(400)
+          .json({
+            status: false,
+            message: "One or more subjects are invalid",
+            invalidSubjects,
+          });
       }
 
       // 3️⃣ Compute diff
@@ -428,12 +445,15 @@ exports.updateTeacher = async (req, res) => {
     });
 
     return res.status(200).json({
+      status: true,
       message: "Teacher updated successfully",
       teacher: updatedTeacher,
     });
   } catch (error) {
     console.error("Update teacher error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
 
@@ -558,14 +578,15 @@ exports.getTeachersBySchool = async (req, res) => {
     });
 
     return res.status(200).json({
+      status: true,
       message: "Teachers fetched successfully",
       teachers,
     });
   } catch (error) {
     console.error("Get Teachers Error:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
 
@@ -581,12 +602,15 @@ exports.activateTeacher = async (req, res) => {
     });
 
     return res.json({
+      status: true,
       message: "Teacher activated successfully",
       teacher,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to activate teacher" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Failed to activate teacher" });
   }
 };
 
@@ -602,12 +626,15 @@ exports.deActivateTeacher = async (req, res) => {
     });
 
     return res.json({
+      status: true,
       message: "Teacher deactivated successfully",
       teacher,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to deactivate teacher" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Failed to deactivate teacher" });
   }
 };
 
@@ -684,6 +711,8 @@ exports.getTeacherDashboard = async (req, res) => {
     console.log("Dashboard data prepared", teacherSubjects);
 
     res.json({
+      status: true,
+       message: "Fetched data for school teacher overview",
       teacher,
       summary: {
         subjectsCount,
@@ -706,7 +735,7 @@ exports.getTeacherDashboard = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Dashboard load failed" });
+    res.status(500).json({ status: false, message: "Dashboard load failed" });
   }
 };
 
@@ -761,10 +790,12 @@ exports.getSchoolTeacherAssignments = async (req, res) => {
       },
     });
 
-    return res.status(200).json(teachers);
+    return res.status(200).json({ status: true, teachers });
   } catch (error) {
     console.error("School teacher assignments error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
 
@@ -828,6 +859,7 @@ exports.assignTeacher = async (req, res) => {
     });
 
     return res.status(201).json({
+      status: true,
       message: "Teacher assigned successfully",
       assignment,
     });
@@ -836,14 +868,14 @@ exports.assignTeacher = async (req, res) => {
 
     // Prisma unique constraint error safety
     if (error.code === "P2002") {
-      return res.status(409).json({
-        message: "Duplicate assignment not allowed",
-      });
+      return res
+        .status(409)
+        .json({ status: false, message: "Duplicate assignment not allowed" });
     }
 
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
 
@@ -916,6 +948,7 @@ exports.updateTeacherAssignment = async (req, res) => {
     });
 
     return res.status(200).json({
+      status: true,
       message: "Assignment updated successfully",
       assignment: updatedAssignment,
     });
@@ -923,12 +956,14 @@ exports.updateTeacherAssignment = async (req, res) => {
     console.error("Update teacher assignment error:", error);
 
     if (error.code === "P2002") {
-      return res.status(409).json({
-        message: "Duplicate assignment not allowed",
-      });
+      return res
+        .status(409)
+        .json({ status: false, message: "Duplicate assignment not allowed" });
     }
 
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
 
@@ -960,14 +995,15 @@ exports.deleteTeacherAssignment = async (req, res) => {
     });
 
     return res.status(200).json({
+      status: true,
       message: "Assignment deleted successfully",
       assignmentId,
     });
   } catch (error) {
     console.error("Delete teacher assignment error:", error);
 
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };

@@ -9,7 +9,7 @@ exports.getAllSchoolsWithDetails = async (req, res) => {
     // Optional: ensure only SUPER_ADMIN can access
     console.log("User role:", req.user);
     if (req.user.role !== "SUPER_ADMIN") {
-      return res.status(403).json({ message: "Access denied" });
+      return res.status(403).json({ status: false, message: "Access denied" });
     }
 
     const schools = await prisma.school.findMany({
@@ -30,13 +30,12 @@ exports.getAllSchoolsWithDetails = async (req, res) => {
       },
     });
 
-    res.status(200).json({
-      count: schools.length,
-      data: schools,
-    });
+    res
+      .status(200)
+      .json({ status: true, count: schools.length, data: schools });
   } catch (error) {
     console.error("Get all schools error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ status: false, message: "Server error" });
   }
 };
 
@@ -53,7 +52,9 @@ exports.approveSchool = async (req, res) => {
     });
 
     if (!school) {
-      return res.status(404).json({ message: "School not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "School not found" });
     }
 
     // 2️⃣ Allow approve only if profile submitted
@@ -65,9 +66,9 @@ exports.approveSchool = async (req, res) => {
 
     // 3️⃣ Ensure profile exists
     if (!school.profile) {
-      return res.status(400).json({
-        message: "School profile is missing",
-      });
+      return res
+        .status(400)
+        .json({ status: false, message: "School profile is missing" });
     }
 
     // 4️⃣ Update school status
@@ -80,12 +81,13 @@ exports.approveSchool = async (req, res) => {
     });
 
     res.status(200).json({
+      status: true,
       message: "School approved successfully",
       school: updatedSchool,
     });
   } catch (error) {
     console.error("Approve School Error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ status: false, message: "Server error" });
   }
 };
 
@@ -100,14 +102,19 @@ exports.suspendSchool = async (req, res) => {
     });
 
     if (!school) {
-      return res.status(404).json({ message: "School not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "School not found" });
     }
 
     // 2️⃣ Only ACTIVE schools can be suspended
     if (school.status !== "ACTIVE") {
-      return res.status(400).json({
-        message: `Only ACTIVE schools can be suspended. Current status: ${school.status}`,
-      });
+      return res
+        .status(400)
+        .json({
+          status: false,
+          message: `Only ACTIVE schools can be suspended. Current status: ${school.status}`,
+        });
     }
 
     // 3️⃣ Update status to SUSPENDED
@@ -119,12 +126,13 @@ exports.suspendSchool = async (req, res) => {
     });
 
     res.status(200).json({
+      status: true,
       message: "School suspended successfully",
       school: updatedSchool,
     });
   } catch (error) {
     console.error("Suspend School Error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ status: false, message: "Server error" });
   }
 };
 
@@ -138,14 +146,19 @@ exports.deactivateSchool = async (req, res) => {
     });
 
     if (!school) {
-      return res.status(404).json({ message: "School not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "School not found" });
     }
 
     // 2️⃣ Only ACTIVE schools can be deactivated
     if (school.status !== "ACTIVE") {
-      return res.status(400).json({
-        message: `Only ACTIVE schools can be deactivated. Current status: ${school.status}`,
-      });
+      return res
+        .status(400)
+        .json({
+          status: false,
+          message: `Only ACTIVE schools can be deactivated. Current status: ${school.status}`,
+        });
     }
 
     // 3️⃣ Update status to INACTIVE
@@ -157,12 +170,13 @@ exports.deactivateSchool = async (req, res) => {
     });
 
     res.status(200).json({
+      status: true,
       message: "School deactivated successfully",
       school: updatedSchool,
     });
   } catch (error) {
     console.error("Deactivate School Error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ status: false, message: "Server error" });
   }
 };
 
@@ -176,16 +190,21 @@ exports.rejectSchool = async (req, res) => {
     });
 
     if (!school) {
-      return res.status(404).json({ message: "School not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "School not found" });
     }
 
     // 2️⃣ Allow reject only for specific states
     const allowedStatuses = ["PROFILE_SUBMITTED", "PROFILE_INCOMPLETE"];
 
     if (!allowedStatuses.includes(school.status)) {
-      return res.status(400).json({
-        message: `School cannot be rejected in '${school.status}' status`,
-      });
+      return res
+        .status(400)
+        .json({
+          status: false,
+          message: `School cannot be rejected in '${school.status}' status`,
+        });
     }
 
     // 3️⃣ Update school status
@@ -200,11 +219,12 @@ exports.rejectSchool = async (req, res) => {
     });
 
     res.status(200).json({
+      status: true,
       message: "School rejected successfully",
       school: updatedSchool,
     });
   } catch (error) {
     console.error("Reject School Error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ status: false, message: "Server error" });
   }
 };
